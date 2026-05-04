@@ -26,4 +26,12 @@ public class AnalyticsController {
         return ResponseEntity.ok(
                 analyticsService.getAnalytics(m, y));
     }
+
+    @GetMapping("/health-score")
+    public ResponseEntity<Integer> getHealthScore() {
+        Long userId = analyticsService.getAuthHelper()
+                .getCurrentUserId();
+        return ResponseEntity.ok(
+                analyticsService.calculateHealthScore(userId));
+    }
 }

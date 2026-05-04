@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react'
 import Layout from '../../components/layout/Layout'
 import Modal from '../../components/common/Modal'
+import SearchBar from '../../components/common/SearchBar'
 import { expenseApi } from '../../api/expenseApi'
 import { accountApi } from '../../api/accountApi'
+import { exportToCSV, formatExpensesForExport } from '../../utils/exportUtils'
+import useTheme from '../../hooks/useTheme'
+import { getCardStyle, getInputStyle, getLabelStyle } from '../../utils/styles'
 import toast from 'react-hot-toast'
 
 const CATEGORIES = [
@@ -31,17 +35,40 @@ const initialForm = {
 }
 
 export default function Expenses() {
+  const { theme } = useTheme()
+  const card = getCardStyle(theme)
+  const input = getInputStyle(theme)
+  const label = getLabelStyle(theme)
+
   const [expenses, setExpenses] = useState([])
   const [accounts, setAccounts] = useState([])
+  const [filtered, setFiltered] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [form, setForm] = useState(initialForm)
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [filter, setFilter] = useState('ALL')
+  const [searchQuery, setSearchQuery] = useState('')
+
+  useEffect(() => { fetchAll() }, [])
 
   useEffect(() => {
-    fetchAll()
-  }, [])
+    let result = expenses
+    if (filter !== 'ALL') {
+      result = result.filter(e => e.transactionType === filter)
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      result = result.filter(e =>
+        e.description?.toLowerCase().includes(q) ||
+        e.category?.toLowerCase().includes(q) ||
+        e.accountName?.toLowerCase().includes(q) ||
+        e.merchant?.toLowerCase().includes(q) ||
+        e.amount?.toString().includes(q)
+      )
+    }
+    setFiltered(result)
+  }, [expenses, filter, searchQuery])
 
   const fetchAll = async () => {
     try {
@@ -50,12 +77,29 @@ export default function Expenses() {
         accountApi.getAll()
       ])
       setExpenses(expRes.data)
+      setFiltered(expRes.data)
       setAccounts(accRes.data)
     } catch {
       toast.error('Failed to load data')
     } finally {
       setFetching(false)
     }
+  }
+
+  const handleSearch = (query) => setSearchQuery(query)
+
+  const handleExport = () => {
+    if (expenses.length === 0) {
+      toast.error('No transactions to export!')
+      return
+    }
+    exportToCSV(
+      formatExpensesForExport(
+        filtered.length > 0 ? filtered : expenses
+      ),
+      'merigullak_transactions'
+    )
+    toast.success('Exported successfully! 📥')
   }
 
   const handleSubmit = async (e) => {
@@ -72,7 +116,7 @@ export default function Expenses() {
       setIsModalOpen(false)
       setForm(initialForm)
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to add transaction')
+      toast.error(err.response?.data?.error || 'Failed to add')
     } finally {
       setLoading(false)
     }
@@ -83,14 +127,11 @@ export default function Expenses() {
     try {
       await expenseApi.delete(id)
       setExpenses(expenses.filter(e => e.id !== id))
-      toast.success('Transaction deleted!')
+      toast.success('Deleted!')
     } catch {
       toast.error('Failed to delete')
     }
   }
-
-  const filtered = filter === 'ALL' ? expenses
-    : expenses.filter(e => e.transactionType === filter)
 
   const totalDebit = expenses
     .filter(e => e.transactionType === 'DEBIT')
@@ -103,131 +144,238 @@ export default function Expenses() {
   return (
     <Layout>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+      <div style={{
+        display: 'flex', justifyContent: 'space-between',
+        alignItems: 'center', marginBottom: '24px',
+        flexWrap: 'wrap', gap: '12px'
+      }}>
         <div>
-          <h1 style={{ color: '#f0eeff', fontSize: '24px', fontWeight: '700', margin: 0 }}>
+          <h1 style={{
+            color: theme.textPrimary,
+            fontSize: '24px', fontWeight: '700', margin: 0
+          }}>
             Transactions
           </h1>
-          <p style={{ color: '#7a7390', fontSize: '14px', margin: '4px 0 0' }}>
+          <p style={{
+            color: theme.textSecondary,
+            fontSize: '14px', margin: '4px 0 0'
+          }}>
             Track all your income & expenses
           </p>
         </div>
-        <button
-          onClick={() => { setForm(initialForm); setIsModalOpen(true) }}
-          style={{
-            background: 'linear-gradient(135deg, #c44b8a, #e8632a)',
-            border: 'none', borderRadius: '12px',
-            padding: '11px 20px', fontSize: '14px',
-            fontWeight: '600', color: 'white', cursor: 'pointer'
-          }}
-        >
-          + Add Transaction
-        </button>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            onClick={handleExport}
+            style={{
+              background: theme.bgCard,
+              border: `1px solid ${theme.border}`,
+              borderRadius: '12px', padding: '11px 16px',
+              fontSize: '13px', fontWeight: '600',
+              color: theme.textSecondary, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: '6px'
+            }}
+          >
+            📥 Export CSV
+          </button>
+          <button
+            onClick={() => { setForm(initialForm); setIsModalOpen(true) }}
+            style={{
+              background: 'linear-gradient(135deg, #c44b8a, #e8632a)',
+              border: 'none', borderRadius: '12px',
+              padding: '11px 20px', fontSize: '14px',
+              fontWeight: '600', color: 'white', cursor: 'pointer'
+            }}
+          >
+            + Add Transaction
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        gap: '16px', marginBottom: '20px'
+      }}>
         {[
           { label: 'Total Expenses', value: totalDebit, color: '#e8632a' },
-          { label: 'Total Income', value: totalCredit, color: '#3ecf8e' },
-          { label: 'Net Balance', value: totalCredit - totalDebit, color: totalCredit - totalDebit >= 0 ? '#3ecf8e' : '#e8632a' },
-        ].map(({ label, value, color }) => (
-          <div key={label} style={{
-            background: '#1c1828', border: '0.5px solid #2a2535',
-            borderRadius: '14px', padding: '18px'
-          }}>
-            <p style={{ color: '#7a7390', fontSize: '12px', margin: '0 0 6px' }}>{label}</p>
-            <p style={{ color, fontSize: '22px', fontWeight: '700', margin: 0 }}>
-              ₹{Math.abs(value).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          { label: 'Total Income', value: totalCredit, color: theme.greenLight },
+          {
+            label: 'Net',
+            value: totalCredit - totalDebit,
+            color: totalCredit - totalDebit >= 0
+              ? theme.greenLight : '#e8632a'
+          },
+        ].map(({ label: lbl, value, color }) => (
+          <div key={lbl} style={{ ...card }}>
+            <p style={{
+              color: theme.textSecondary,
+              fontSize: '12px', margin: '0 0 6px'
+            }}>
+              {lbl}
+            </p>
+            <p style={{
+              color, fontSize: '18px', fontWeight: '700', margin: 0
+            }}>
+              ₹{Math.abs(value).toLocaleString('en-IN', {
+                minimumFractionDigits: 2
+              })}
             </p>
           </div>
         ))}
       </div>
 
-      {/* Filter tabs */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-        {['ALL', 'DEBIT', 'CREDIT'].map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            style={{
-              background: filter === f
-                ? 'linear-gradient(135deg, #c44b8a, #e8632a)'
-                : '#1c1828',
-              border: '0.5px solid #2a2535',
-              borderRadius: '10px', padding: '8px 18px',
-              fontSize: '13px', fontWeight: '600',
-              color: filter === f ? 'white' : '#7a7390',
-              cursor: 'pointer'
-            }}
-          >
-            {f === 'ALL' ? 'All' : f === 'DEBIT' ? '📤 Expenses' : '📥 Income'}
-          </button>
-        ))}
+      {/* Search + Filter */}
+      <div style={{
+        display: 'flex', gap: '10px', marginBottom: '20px',
+        flexWrap: 'wrap', alignItems: 'center'
+      }}>
+        <SearchBar
+          onSearch={handleSearch}
+          placeholder="Search by name, category, account..."
+        />
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {['ALL', 'DEBIT', 'CREDIT'].map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              style={{
+                background: filter === f
+                  ? 'linear-gradient(135deg, #c44b8a, #e8632a)'
+                  : theme.bgCard,
+                border: `1px solid ${filter === f
+                  ? 'transparent' : theme.border}`,
+                borderRadius: '10px', padding: '8px 14px',
+                fontSize: '12px', fontWeight: '600',
+                color: filter === f ? 'white' : theme.textSecondary,
+                cursor: 'pointer', whiteSpace: 'nowrap',
+                transition: 'all 0.2s'
+              }}
+            >
+              {f === 'ALL' ? 'All'
+                : f === 'DEBIT' ? '📤 Expense' : '📥 Income'}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Transactions List */}
+      {/* Transaction List */}
       {fetching ? (
-        <div style={{ textAlign: 'center', color: '#7a7390', padding: '60px' }}>
+        <div style={{
+          textAlign: 'center',
+          color: theme.textSecondary, padding: '60px'
+        }}>
           Loading transactions...
         </div>
       ) : filtered.length === 0 ? (
         <div style={{
-          textAlign: 'center', padding: '60px',
-          background: '#1c1828', borderRadius: '16px',
-          border: '0.5px solid #2a2535'
+          ...card, textAlign: 'center', padding: '60px'
         }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>💸</div>
-          <p style={{ color: '#7a7390', fontSize: '15px', margin: 0 }}>
-            No transactions yet. Add your first one!
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>
+            {searchQuery ? '🔍' : '💸'}
+          </div>
+          <p style={{
+            color: theme.textSecondary, fontSize: '15px', margin: 0
+          }}>
+            {searchQuery
+              ? `No results for "${searchQuery}"`
+              : 'No transactions yet. Add your first one!'}
           </p>
         </div>
       ) : (
         <div style={{
-          background: '#1c1828', border: '0.5px solid #2a2535',
-          borderRadius: '16px', overflow: 'hidden'
+          ...card, padding: 0, overflow: 'hidden'
         }}>
+          {/* Count bar */}
+          <div style={{
+            padding: '12px 20px',
+            borderBottom: `1px solid ${theme.border}`,
+            display: 'flex', justifyContent: 'space-between',
+            alignItems: 'center',
+            background: theme.bgInput
+          }}>
+            <p style={{
+              color: theme.textSecondary,
+              fontSize: '12px', margin: 0
+            }}>
+              {filtered.length} transaction
+              {filtered.length !== 1 ? 's' : ''}
+              {searchQuery && ` for "${searchQuery}"`}
+            </p>
+            {filtered.length > 0 && (
+              <button
+                onClick={handleExport}
+                style={{
+                  background: 'transparent', border: 'none',
+                  color: '#c44b8a', fontSize: '12px',
+                  cursor: 'pointer', textDecoration: 'underline'
+                }}
+              >
+                Export {filtered.length} results
+              </button>
+            )}
+          </div>
+
+          {/* Rows */}
           {filtered.map((expense, idx) => {
             const cat = CATEGORIES.find(c => c.value === expense.category)
             const isDebit = expense.transactionType === 'DEBIT'
             return (
-              <div key={expense.id} style={{
-                display: 'flex', alignItems: 'center',
-                padding: '16px 20px', gap: '14px',
-                borderBottom: idx < filtered.length - 1 ? '0.5px solid #2a2535' : 'none',
-                transition: 'background 0.2s'
-              }}
-                onMouseOver={e => e.currentTarget.style.background = '#13111a'}
-                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+              <div
+                key={expense.id}
+                style={{
+                  display: 'flex', alignItems: 'center',
+                  padding: '14px 20px', gap: '14px',
+                  borderBottom: idx < filtered.length - 1
+                    ? `1px solid ${theme.border}` : 'none',
+                  transition: 'background 0.2s',
+                  background: 'transparent'
+                }}
+                onMouseOver={e =>
+                  e.currentTarget.style.background = theme.bgHover}
+                onMouseOut={e =>
+                  e.currentTarget.style.background = 'transparent'}
               >
                 <div style={{
-                  width: '42px', height: '42px', borderRadius: '12px',
-                  background: isDebit ? 'rgba(232,99,42,0.15)' : 'rgba(62,207,142,0.15)',
+                  width: '42px', height: '42px',
+                  borderRadius: '12px', flexShrink: 0,
+                  background: isDebit ? theme.redBg : theme.greenBg,
                   display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', fontSize: '20px',
-                  flexShrink: 0
+                  justifyContent: 'center', fontSize: '20px'
                 }}>
                   {cat?.icon || '📦'}
                 </div>
 
-                <div style={{ flex: 1 }}>
-                  <p style={{ color: '#f0eeff', fontSize: '14px', fontWeight: '600', margin: 0 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{
+                    color: theme.textPrimary, fontSize: '14px',
+                    fontWeight: '600', margin: 0,
+                    overflow: 'hidden', textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
                     {expense.description || cat?.label || expense.category}
                   </p>
-                  <p style={{ color: '#7a7390', fontSize: '12px', margin: '2px 0 0' }}>
+                  <p style={{
+                    color: theme.textSecondary,
+                    fontSize: '12px', margin: '2px 0 0'
+                  }}>
                     {expense.accountName} • {expense.expenseDate}
                     {expense.merchant && ` • ${expense.merchant}`}
                   </p>
                 </div>
 
-                <div style={{ textAlign: 'right' }}>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <p style={{
-                    color: isDebit ? '#e8632a' : '#3ecf8e',
-                    fontSize: '16px', fontWeight: '700', margin: 0
+                    color: isDebit ? '#e8632a' : theme.greenLight,
+                    fontSize: '15px', fontWeight: '700', margin: 0
                   }}>
-                    {isDebit ? '-' : '+'}₹{parseFloat(expense.amount).toLocaleString('en-IN')}
+                    {isDebit ? '-' : '+'}
+                    ₹{parseFloat(expense.amount).toLocaleString('en-IN')}
                   </p>
-                  <p style={{ color: '#7a7390', fontSize: '11px', margin: '2px 0 0' }}>
+                  <p style={{
+                    color: theme.textSecondary,
+                    fontSize: '11px', margin: '2px 0 0'
+                  }}>
                     {cat?.label}
                   </p>
                 </div>
@@ -236,10 +384,12 @@ export default function Expenses() {
                   onClick={() => handleDelete(expense.id)}
                   style={{
                     background: 'transparent', border: 'none',
-                    color: '#4a4560', cursor: 'pointer',
-                    fontSize: '16px', padding: '4px'
+                    color: theme.textMuted, cursor: 'pointer',
+                    fontSize: '16px', flexShrink: 0, padding: '4px'
                   }}
-                >🗑️</button>
+                >
+                  🗑️
+                </button>
               </div>
             )
           })}
@@ -253,7 +403,7 @@ export default function Expenses() {
         title="Add Transaction"
       >
         <form onSubmit={handleSubmit}>
-          {/* Transaction Type Toggle */}
+          {/* Type Toggle */}
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
             {['DEBIT', 'CREDIT'].map(type => (
               <button
@@ -262,18 +412,18 @@ export default function Expenses() {
                 style={{
                   flex: 1,
                   background: form.transactionType === type
-                    ? type === 'DEBIT'
-                      ? 'rgba(232,99,42,0.2)'
-                      : 'rgba(62,207,142,0.2)'
-                    : '#13111a',
+                    ? type === 'DEBIT' ? theme.redBg : theme.greenBg
+                    : theme.bgInput,
                   border: form.transactionType === type
-                    ? `1px solid ${type === 'DEBIT' ? '#e8632a' : '#3ecf8e'}`
-                    : '0.5px solid #2a2535',
+                    ? `1px solid ${type === 'DEBIT'
+                      ? theme.redBorder : theme.greenBorder}`
+                    : `1px solid ${theme.border}`,
                   borderRadius: '10px', padding: '10px',
                   color: form.transactionType === type
-                    ? type === 'DEBIT' ? '#e8632a' : '#3ecf8e'
-                    : '#7a7390',
-                  fontWeight: '600', fontSize: '13px', cursor: 'pointer'
+                    ? type === 'DEBIT' ? theme.redLight : theme.greenLight
+                    : theme.textSecondary,
+                  fontWeight: '600', fontSize: '13px', cursor: 'pointer',
+                  transition: 'all 0.2s'
                 }}
               >
                 {type === 'DEBIT' ? '📤 Expense' : '📥 Income'}
@@ -283,18 +433,11 @@ export default function Expenses() {
 
           {/* Account */}
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '5px' }}>
-              Account
-            </label>
+            <label style={label}>Account</label>
             <select
               required value={form.accountId}
               onChange={e => setForm({ ...form, accountId: e.target.value })}
-              style={{
-                width: '100%', background: '#13111a',
-                border: '0.5px solid #2a2535', borderRadius: '10px',
-                padding: '11px 14px', fontSize: '13px',
-                color: '#c9c4e8', outline: 'none', boxSizing: 'border-box'
-              }}
+              style={input}
             >
               <option value="">Select account</option>
               {accounts.map(a => (
@@ -305,30 +448,20 @@ export default function Expenses() {
 
           {/* Amount */}
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '5px' }}>
-              Amount (₹)
-            </label>
+            <label style={label}>Amount (₹)</label>
             <input
               type="number" min="0.01" step="0.01" required
-              placeholder="0.00"
-              value={form.amount}
+              placeholder="0.00" value={form.amount}
               onChange={e => setForm({ ...form, amount: e.target.value })}
-              style={{
-                width: '100%', background: '#13111a',
-                border: '0.5px solid #2a2535', borderRadius: '10px',
-                padding: '11px 14px', fontSize: '13px',
-                color: '#c9c4e8', outline: 'none', boxSizing: 'border-box'
-              }}
+              style={input}
               onFocus={e => e.target.style.borderColor = '#c44b8a'}
-              onBlur={e => e.target.style.borderColor = '#2a2535'}
+              onBlur={e => e.target.style.borderColor = theme.inputBorder}
             />
           </div>
 
-          {/* Category */}
+          {/* Category Grid */}
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '8px' }}>
-              Category
-            </label>
+            <label style={label}>Category</label>
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px'
@@ -339,17 +472,20 @@ export default function Expenses() {
                   onClick={() => setForm({ ...form, category: cat.value })}
                   style={{
                     background: form.category === cat.value
-                      ? 'rgba(196,75,138,0.2)' : '#13111a',
+                      ? theme.bgAccent : theme.bgInput,
                     border: form.category === cat.value
-                      ? '1px solid #c44b8a' : '0.5px solid #2a2535',
+                      ? `1px solid #c44b8a`
+                      : `1px solid ${theme.border}`,
                     borderRadius: '8px', padding: '8px 4px',
-                    cursor: 'pointer', textAlign: 'center'
+                    cursor: 'pointer', textAlign: 'center',
+                    transition: 'all 0.15s'
                   }}
                 >
                   <div style={{ fontSize: '18px' }}>{cat.icon}</div>
                   <div style={{
                     fontSize: '9px', marginTop: '2px',
-                    color: form.category === cat.value ? '#c44b8a' : '#7a7390'
+                    color: form.category === cat.value
+                      ? '#c44b8a' : theme.textSecondary
                   }}>
                     {cat.label}
                   </div>
@@ -360,54 +496,36 @@ export default function Expenses() {
 
           {/* Date */}
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '5px' }}>
-              Date
-            </label>
+            <label style={label}>Date</label>
             <input
-              type="date" required
-              value={form.expenseDate}
+              type="date" required value={form.expenseDate}
               onChange={e => setForm({ ...form, expenseDate: e.target.value })}
-              style={{
-                width: '100%', background: '#13111a',
-                border: '0.5px solid #2a2535', borderRadius: '10px',
-                padding: '11px 14px', fontSize: '13px',
-                color: '#c9c4e8', outline: 'none', boxSizing: 'border-box'
-              }}
+              style={input}
             />
           </div>
 
-          {/* Description & Merchant */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+          {/* Description + Merchant */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '12px', marginBottom: '20px'
+          }}>
             <div>
-              <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '5px' }}>
-                Description
-              </label>
+              <label style={label}>Description</label>
               <input
                 type="text" placeholder="e.g. Lunch"
                 value={form.description}
                 onChange={e => setForm({ ...form, description: e.target.value })}
-                style={{
-                  width: '100%', background: '#13111a',
-                  border: '0.5px solid #2a2535', borderRadius: '10px',
-                  padding: '11px 14px', fontSize: '13px',
-                  color: '#c9c4e8', outline: 'none', boxSizing: 'border-box'
-                }}
+                style={input}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '5px' }}>
-                Merchant
-              </label>
+              <label style={label}>Merchant</label>
               <input
                 type="text" placeholder="e.g. Zomato"
                 value={form.merchant}
                 onChange={e => setForm({ ...form, merchant: e.target.value })}
-                style={{
-                  width: '100%', background: '#13111a',
-                  border: '0.5px solid #2a2535', borderRadius: '10px',
-                  padding: '11px 14px', fontSize: '13px',
-                  color: '#c9c4e8', outline: 'none', boxSizing: 'border-box'
-                }}
+                style={input}
               />
             </div>
           </div>
@@ -416,10 +534,13 @@ export default function Expenses() {
             type="submit" disabled={loading}
             style={{
               width: '100%',
-              background: loading ? '#2a2535' : 'linear-gradient(135deg, #c44b8a, #e8632a)',
+              background: loading
+                ? theme.border
+                : 'linear-gradient(135deg, #c44b8a, #e8632a)',
               border: 'none', borderRadius: '12px',
               padding: '13px', fontSize: '14px',
-              fontWeight: '700', color: 'white', cursor: 'pointer'
+              fontWeight: '700', color: 'white',
+              cursor: loading ? 'not-allowed' : 'pointer'
             }}
           >
             {loading ? 'Saving...' : 'Add Transaction'}

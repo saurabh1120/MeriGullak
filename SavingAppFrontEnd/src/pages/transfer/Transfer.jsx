@@ -3,9 +3,16 @@ import Layout from '../../components/layout/Layout'
 import Modal from '../../components/common/Modal'
 import { transferApi } from '../../api/transferApi'
 import { accountApi } from '../../api/accountApi'
+import useTheme from '../../hooks/useTheme'
+import { getCardStyle, getInputStyle, getLabelStyle } from '../../utils/styles'
 import toast from 'react-hot-toast'
 
 export default function Transfer() {
+  const { theme, isDark } = useTheme()
+  const card = getCardStyle(theme)
+  const input = getInputStyle(theme)
+  const label = getLabelStyle(theme)
+
   const [transfers, setTransfers] = useState([])
   const [accounts, setAccounts] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -63,25 +70,35 @@ export default function Transfer() {
     }
   }
 
-  const getAccountName = (id) =>
-    accounts.find(a => a.id === id)?.accountName || 'Unknown'
+  const getAccountName = (accountObj) =>
+    accountObj?.accountName || 'Unknown'
 
   return (
     <Layout>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+      <div style={{
+        display: 'flex', justifyContent: 'space-between',
+        alignItems: 'center', marginBottom: '24px',
+        flexWrap: 'wrap', gap: '12px'
+      }}>
         <div>
-          <h1 style={{ color: '#f0eeff', fontSize: '24px', fontWeight: '700', margin: 0 }}>
+          <h1 style={{
+            color: theme.textPrimary,
+            fontSize: '24px', fontWeight: '700', margin: 0
+          }}>
             Transfers 🔄
           </h1>
-          <p style={{ color: '#7a7390', fontSize: '14px', margin: '4px 0 0' }}>
+          <p style={{
+            color: theme.textSecondary,
+            fontSize: '14px', margin: '4px 0 0'
+          }}>
             Move money between your accounts
           </p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
           style={{
-            background: 'linear-gradient(135deg, #c44b8a, #e8632a)',
+            background: theme.accentGradient,
             border: 'none', borderRadius: '12px',
             padding: '11px 20px', fontSize: '14px',
             fontWeight: '600', color: 'white', cursor: 'pointer'
@@ -91,22 +108,29 @@ export default function Transfer() {
         </button>
       </div>
 
-      {/* Accounts Quick View */}
+      {/* Account Cards */}
       <div style={{
-        display: 'flex', gap: '12px', marginBottom: '24px',
-        overflowX: 'auto', paddingBottom: '4px'
+        display: 'flex', gap: '12px',
+        marginBottom: '24px', overflowX: 'auto',
+        paddingBottom: '4px'
       }}>
         {accounts.map(acc => (
           <div key={acc.id} style={{
-            background: '#1c1828', border: '0.5px solid #2a2535',
-            borderRadius: '12px', padding: '14px 18px',
+            ...card,
             minWidth: '160px', flexShrink: 0,
-            borderTop: `2px solid ${acc.color || '#c44b8a'}`
+            borderTop: `3px solid ${acc.color || '#c44b8a'}`,
+            padding: '14px 16px'
           }}>
-            <p style={{ color: '#7a7390', fontSize: '11px', margin: '0 0 4px' }}>
+            <p style={{
+              color: theme.textSecondary,
+              fontSize: '11px', margin: '0 0 4px'
+            }}>
               {acc.accountName}
             </p>
-            <p style={{ color: '#f0eeff', fontSize: '16px', fontWeight: '700', margin: 0 }}>
+            <p style={{
+              color: theme.textPrimary,
+              fontSize: '16px', fontWeight: '700', margin: 0
+            }}>
               ₹{parseFloat(acc.balance).toLocaleString('en-IN')}
             </p>
           </div>
@@ -115,59 +139,83 @@ export default function Transfer() {
 
       {/* Transfer History */}
       {fetching ? (
-        <div style={{ textAlign: 'center', color: '#7a7390', padding: '60px' }}>
+        <div style={{
+          textAlign: 'center',
+          color: theme.textSecondary, padding: '60px'
+        }}>
           Loading transfers...
         </div>
       ) : transfers.length === 0 ? (
         <div style={{
-          textAlign: 'center', padding: '60px',
-          background: '#1c1828', borderRadius: '16px',
-          border: '0.5px solid #2a2535'
+          ...card, textAlign: 'center', padding: '60px'
         }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔄</div>
-          <p style={{ color: '#7a7390', fontSize: '15px', margin: 0 }}>
-            No transfers yet. Move money between accounts!
+          <p style={{ color: theme.textSecondary, fontSize: '15px', margin: 0 }}>
+            No transfers yet!
           </p>
         </div>
       ) : (
-        <div style={{
-          background: '#1c1828', border: '0.5px solid #2a2535',
-          borderRadius: '16px', overflow: 'hidden'
-        }}>
-          <div style={{ padding: '16px 20px', borderBottom: '0.5px solid #2a2535' }}>
-            <p style={{ color: '#7a7390', fontSize: '13px', margin: 0 }}>
+        <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
+          <div style={{
+            padding: '16px 20px',
+            borderBottom: `1px solid ${theme.border}`
+          }}>
+            <p style={{
+              color: theme.textSecondary,
+              fontSize: '13px', margin: 0, fontWeight: '600'
+            }}>
               Transfer History ({transfers.length})
             </p>
           </div>
           {transfers.map((transfer, idx) => (
-            <div key={transfer.id} style={{
-              display: 'flex', alignItems: 'center',
-              padding: '16px 20px', gap: '14px',
-              borderBottom: idx < transfers.length - 1
-                ? '0.5px solid #2a2535' : 'none'
-            }}>
-              <div style={{
-                width: '42px', height: '42px', borderRadius: '12px',
-                background: 'rgba(124,58,237,0.15)',
+            <div
+              key={transfer.id}
+              style={{
                 display: 'flex', alignItems: 'center',
-                justifyContent: 'center', fontSize: '20px', flexShrink: 0
+                padding: '16px 20px', gap: '14px',
+                borderBottom: idx < transfers.length - 1
+                  ? `1px solid ${theme.border}` : 'none',
+                transition: 'background 0.2s'
+              }}
+              onMouseOver={e =>
+                e.currentTarget.style.background = theme.bgHover}
+              onMouseOut={e =>
+                e.currentTarget.style.background = 'transparent'}
+            >
+              <div style={{
+                width: '42px', height: '42px',
+                borderRadius: '12px', flexShrink: 0,
+                background: theme.purpleBg,
+                display: 'flex', alignItems: 'center',
+                justifyContent: 'center', fontSize: '20px'
               }}>
                 🔄
               </div>
 
-              <div style={{ flex: 1 }}>
-                <p style={{ color: '#f0eeff', fontSize: '14px', fontWeight: '600', margin: 0 }}>
-                  {getAccountName(transfer.fromAccount?.id)}
-                  <span style={{ color: '#7a7390', margin: '0 8px' }}>→</span>
-                  {getAccountName(transfer.toAccount?.id)}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{
+                  color: theme.textPrimary,
+                  fontSize: '14px', fontWeight: '600', margin: 0
+                }}>
+                  {getAccountName(transfer.fromAccount)}
+                  <span style={{
+                    color: theme.textMuted, margin: '0 8px'
+                  }}>→</span>
+                  {getAccountName(transfer.toAccount)}
                 </p>
-                <p style={{ color: '#7a7390', fontSize: '12px', margin: '2px 0 0' }}>
+                <p style={{
+                  color: theme.textSecondary,
+                  fontSize: '12px', margin: '2px 0 0'
+                }}>
                   {transfer.transferDate}
                   {transfer.note && ` • ${transfer.note}`}
                 </p>
               </div>
 
-              <p style={{ color: '#7c3aed', fontSize: '16px', fontWeight: '700', margin: 0 }}>
+              <p style={{
+                color: theme.purple,
+                fontSize: '16px', fontWeight: '700', margin: 0
+              }}>
                 ₹{parseFloat(transfer.amount).toLocaleString('en-IN')}
               </p>
             </div>
@@ -183,18 +231,11 @@ export default function Transfer() {
       >
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '5px' }}>
-              From Account
-            </label>
+            <label style={label}>From Account</label>
             <select
               required value={form.fromAccountId}
               onChange={e => setForm({ ...form, fromAccountId: e.target.value })}
-              style={{
-                width: '100%', background: '#13111a',
-                border: '0.5px solid #2a2535', borderRadius: '10px',
-                padding: '11px 14px', fontSize: '13px',
-                color: '#c9c4e8', outline: 'none', boxSizing: 'border-box'
-              }}
+              style={input}
             >
               <option value="">Select source account</option>
               {accounts.map(a => (
@@ -206,80 +247,51 @@ export default function Transfer() {
           </div>
 
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '5px' }}>
-              To Account
-            </label>
+            <label style={label}>To Account</label>
             <select
               required value={form.toAccountId}
               onChange={e => setForm({ ...form, toAccountId: e.target.value })}
-              style={{
-                width: '100%', background: '#13111a',
-                border: '0.5px solid #2a2535', borderRadius: '10px',
-                padding: '11px 14px', fontSize: '13px',
-                color: '#c9c4e8', outline: 'none', boxSizing: 'border-box'
-              }}
+              style={input}
             >
               <option value="">Select destination account</option>
-              {accounts.filter(a => a.id !== parseInt(form.fromAccountId)).map(a => (
-                <option key={a.id} value={a.id}>
-                  {a.accountName} — ₹{parseFloat(a.balance).toLocaleString('en-IN')}
-                </option>
-              ))}
+              {accounts
+                .filter(a => a.id !== parseInt(form.fromAccountId))
+                .map(a => (
+                  <option key={a.id} value={a.id}>
+                    {a.accountName} — ₹{parseFloat(a.balance).toLocaleString('en-IN')}
+                  </option>
+                ))}
             </select>
           </div>
 
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '5px' }}>
-              Amount (₹)
-            </label>
+            <label style={label}>Amount (₹)</label>
             <input
               type="number" required min="0.01" step="0.01"
-              placeholder="0.00"
-              value={form.amount}
+              placeholder="0.00" value={form.amount}
               onChange={e => setForm({ ...form, amount: e.target.value })}
-              style={{
-                width: '100%', background: '#13111a',
-                border: '0.5px solid #2a2535', borderRadius: '10px',
-                padding: '11px 14px', fontSize: '13px',
-                color: '#c9c4e8', outline: 'none', boxSizing: 'border-box'
-              }}
+              style={input}
               onFocus={e => e.target.style.borderColor = '#c44b8a'}
-              onBlur={e => e.target.style.borderColor = '#2a2535'}
+              onBlur={e => e.target.style.borderColor = theme.inputBorder}
             />
           </div>
 
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '5px' }}>
-              Date
-            </label>
+            <label style={label}>Date</label>
             <input
-              type="date" required
-              value={form.transferDate}
+              type="date" required value={form.transferDate}
               onChange={e => setForm({ ...form, transferDate: e.target.value })}
-              style={{
-                width: '100%', background: '#13111a',
-                border: '0.5px solid #2a2535', borderRadius: '10px',
-                padding: '11px 14px', fontSize: '13px',
-                color: '#c9c4e8', outline: 'none', boxSizing: 'border-box'
-              }}
+              style={input}
             />
           </div>
 
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '5px' }}>
-              Note (optional)
-            </label>
+            <label style={label}>Note (optional)</label>
             <input
-              type="text"
-              placeholder="e.g. Moving to PhonePe"
+              type="text" placeholder="e.g. Moving to PhonePe"
               value={form.note}
               onChange={e => setForm({ ...form, note: e.target.value })}
-              style={{
-                width: '100%', background: '#13111a',
-                border: '0.5px solid #2a2535', borderRadius: '10px',
-                padding: '11px 14px', fontSize: '13px',
-                color: '#c9c4e8', outline: 'none', boxSizing: 'border-box'
-              }}
+              style={input}
             />
           </div>
 
@@ -287,11 +299,12 @@ export default function Transfer() {
             type="submit" disabled={loading}
             style={{
               width: '100%',
-              background: loading ? '#2a2535'
+              background: loading ? theme.border
                 : 'linear-gradient(135deg, #7c3aed, #c44b8a)',
               border: 'none', borderRadius: '12px',
               padding: '13px', fontSize: '14px',
-              fontWeight: '700', color: 'white', cursor: 'pointer'
+              fontWeight: '700', color: 'white',
+              cursor: loading ? 'not-allowed' : 'pointer'
             }}
           >
             {loading ? 'Transferring...' : 'Transfer Now 🔄'}

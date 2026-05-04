@@ -97,4 +97,71 @@ public class AuthService {
                 .message("Login successful!")
                 .build();
     }
+    public String resendOtp(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(
+                        "Email not found", HttpStatus.NOT_FOUND));
+
+        if (user.isEmailVerified()) {
+            throw new CustomException(
+                    "Email already verified", HttpStatus.BAD_REQUEST);
+        }
+
+        otpService.generateAndSendOtp(
+                email, OtpVerification.OtpPurpose.REGISTRATION);
+
+        return "OTP resent to " + email;
+    }
+    public String forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(
+                        "No account found with this email",
+                        HttpStatus.NOT_FOUND));
+
+        otpService.generateAndSendOtp(
+                email,
+                OtpVerification.OtpPurpose.PASSWORD_RESET
+        );
+
+        return "OTP sent to " + email + " for password reset";
+    }
+
+    public String verifyForgotPasswordOtp(
+            String email, String otp
+    ) {
+        boolean verified = otpService.verifyOtp(
+                email, otp,
+                OtpVerification.OtpPurpose.PASSWORD_RESET
+        );
+
+        if (!verified) {
+            throw new CustomException(
+                    "Invalid or expired OTP",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        return "OTP verified successfully";
+    }
+
+    public String resetPassword(
+            String email, String otp, String newPassword
+    ) {
+        // Verify OTP one more time for security
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(
+                        "User not found", HttpStatus.NOT_FOUND));
+
+        if (newPassword.length() < 6) {
+            throw new CustomException(
+                    "Password must be at least 6 characters",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        return "Password reset successfully! Please login.";
+    }
 }

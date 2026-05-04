@@ -46,6 +46,6 @@ public class OtpVerification {
     }
 
     public enum OtpPurpose {
-        REGISTRATION, LOGIN
+        REGISTRATION, LOGIN ,PASSWORD_RESET
     }
 }

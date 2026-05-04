@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import Layout from '../../components/layout/Layout'
 import Modal from '../../components/common/Modal'
 import { gullakApi } from '../../api/gullakApi'
+import useTheme from '../../hooks/useTheme'
+import { getCardStyle, getInputStyle, getLabelStyle } from '../../utils/styles'
 import toast from 'react-hot-toast'
 
 const GOAL_ICONS = [
@@ -21,12 +23,19 @@ const initialForm = {
 }
 
 export default function Gullak() {
+  const { theme } = useTheme()
+  const card = getCardStyle(theme)
+  const input = getInputStyle(theme)
+  const label = getLabelStyle(theme)
+
   const [gullaks, setGullaks] = useState([])
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isTxOpen, setIsTxOpen] = useState(false)
   const [selectedGullak, setSelectedGullak] = useState(null)
   const [form, setForm] = useState(initialForm)
-  const [txForm, setTxForm] = useState({ amount: '', type: 'DEPOSIT', note: '' })
+  const [txForm, setTxForm] = useState({
+    amount: '', type: 'DEPOSIT', note: ''
+  })
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
 
@@ -77,8 +86,9 @@ export default function Gullak() {
       if (res.data.status === 'COMPLETED') {
         toast.success('🎉 Goal Completed! Congratulations!')
       } else {
-        toast.success(txForm.type === 'DEPOSIT'
-          ? 'Savings added! 💰' : 'Withdrawal done!')
+        toast.success(
+          txForm.type === 'DEPOSIT' ? 'Savings added! 💰' : 'Withdrawal done!'
+        )
       }
       setIsTxOpen(false)
       setTxForm({ amount: '', type: 'DEPOSIT', note: '' })
@@ -114,12 +124,22 @@ export default function Gullak() {
   return (
     <Layout>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+      <div style={{
+        display: 'flex', justifyContent: 'space-between',
+        alignItems: 'center', marginBottom: '24px',
+        flexWrap: 'wrap', gap: '12px'
+      }}>
         <div>
-          <h1 style={{ color: '#f0eeff', fontSize: '24px', fontWeight: '700', margin: 0 }}>
-            My Gullak 🪙
+          <h1 style={{
+            color: theme.textPrimary,
+            fontSize: '24px', fontWeight: '700', margin: 0
+          }}>
+            My Gullak 🐷
           </h1>
-          <p style={{ color: '#7a7390', fontSize: '14px', margin: '4px 0 0' }}>
+          <p style={{
+            color: theme.textSecondary,
+            fontSize: '14px', margin: '4px 0 0'
+          }}>
             Your savings goals
           </p>
         </div>
@@ -136,41 +156,66 @@ export default function Gullak() {
         </button>
       </div>
 
-      {/* Summary */}
+      {/* Summary Cards */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
         gap: '16px', marginBottom: '24px'
       }}>
         {[
-          { label: 'Total Saved', value: `₹${totalSaved.toLocaleString('en-IN')}`, color: '#3ecf8e' },
-          { label: 'Total Target', value: `₹${totalTarget.toLocaleString('en-IN')}`, color: '#c44b8a' },
-          { label: 'Active Goals', value: gullaks.filter(g => g.status === 'ACTIVE').length, color: '#f59e0b' },
-          { label: 'Completed', value: gullaks.filter(g => g.status === 'COMPLETED').length, color: '#7c3aed' },
-        ].map(({ label, value, color }) => (
-          <div key={label} style={{
-            background: '#1c1828', border: '0.5px solid #2a2535',
-            borderRadius: '14px', padding: '18px'
-          }}>
-            <p style={{ color: '#7a7390', fontSize: '12px', margin: '0 0 6px' }}>{label}</p>
-            <p style={{ color, fontSize: '22px', fontWeight: '700', margin: 0 }}>{value}</p>
+          {
+            label: 'Total Saved',
+            value: `₹${totalSaved.toLocaleString('en-IN')}`,
+            color: theme.greenLight
+          },
+          {
+            label: 'Total Target',
+            value: `₹${totalTarget.toLocaleString('en-IN')}`,
+            color: '#c44b8a'
+          },
+          {
+            label: 'Active Goals',
+            value: gullaks.filter(g => g.status === 'ACTIVE').length,
+            color: theme.yellowLight
+          },
+          {
+            label: 'Completed',
+            value: gullaks.filter(g => g.status === 'COMPLETED').length,
+            color: theme.purple
+          },
+        ].map(({ label: lbl, value, color }) => (
+          <div key={lbl} style={{ ...card }}>
+            <p style={{
+              color: theme.textSecondary,
+              fontSize: '12px', margin: '0 0 6px'
+            }}>
+              {lbl}
+            </p>
+            <p style={{
+              color, fontSize: '22px', fontWeight: '700', margin: 0
+            }}>
+              {value}
+            </p>
           </div>
         ))}
       </div>
 
       {/* Gullak Cards */}
       {fetching ? (
-        <div style={{ textAlign: 'center', color: '#7a7390', padding: '60px' }}>
+        <div style={{
+          textAlign: 'center',
+          color: theme.textSecondary, padding: '60px'
+        }}>
           Loading gullaks...
         </div>
       ) : gullaks.length === 0 ? (
         <div style={{
-          textAlign: 'center', padding: '60px',
-          background: '#1c1828', borderRadius: '16px',
-          border: '0.5px solid #2a2535'
+          ...card, textAlign: 'center', padding: '60px'
         }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>🪙</div>
-          <p style={{ color: '#7a7390', fontSize: '15px', margin: 0 }}>
+          <p style={{
+            color: theme.textSecondary, fontSize: '15px', margin: 0
+          }}>
             No gullaks yet. Create your first savings goal!
           </p>
         </div>
@@ -185,9 +230,7 @@ export default function Gullak() {
             const isCompleted = gullak.status === 'COMPLETED'
             return (
               <div key={gullak.id} style={{
-                background: '#1c1828',
-                border: `0.5px solid ${gullak.color || '#2a2535'}40`,
-                borderRadius: '20px', padding: '22px',
+                ...card,
                 borderTop: `3px solid ${gullak.color || '#c44b8a'}`,
                 position: 'relative', overflow: 'hidden'
               }}>
@@ -195,19 +238,24 @@ export default function Gullak() {
                 {isCompleted && (
                   <div style={{
                     position: 'absolute', top: '12px', right: '12px',
-                    background: 'rgba(62,207,142,0.2)',
-                    border: '0.5px solid #3ecf8e',
+                    background: theme.greenBg,
+                    border: `1px solid ${theme.greenBorder}`,
                     borderRadius: '20px', padding: '3px 10px',
-                    fontSize: '11px', color: '#3ecf8e', fontWeight: '600'
+                    fontSize: '11px', color: theme.greenLight,
+                    fontWeight: '600'
                   }}>
                     ✅ Completed!
                   </div>
                 )}
 
                 {/* Goal info */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center',
+                  gap: '12px', marginBottom: '16px'
+                }}>
                   <div style={{
-                    width: '48px', height: '48px', borderRadius: '14px',
+                    width: '48px', height: '48px',
+                    borderRadius: '14px',
                     background: `${gullak.color || '#c44b8a'}20`,
                     display: 'flex', alignItems: 'center',
                     justifyContent: 'center', fontSize: '24px'
@@ -215,11 +263,17 @@ export default function Gullak() {
                     {gullak.icon || '💰'}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ color: '#f0eeff', fontWeight: '700', fontSize: '16px', margin: 0 }}>
+                    <p style={{
+                      color: theme.textPrimary,
+                      fontWeight: '700', fontSize: '16px', margin: 0
+                    }}>
                       {gullak.goalName}
                     </p>
                     {gullak.description && (
-                      <p style={{ color: '#7a7390', fontSize: '12px', margin: '2px 0 0' }}>
+                      <p style={{
+                        color: theme.textSecondary,
+                        fontSize: '12px', margin: '2px 0 0'
+                      }}>
                         {gullak.description}
                       </p>
                     )}
@@ -227,25 +281,53 @@ export default function Gullak() {
                 </div>
 
                 {/* Amounts */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between', marginBottom: '12px'
+                }}>
                   <div>
-                    <p style={{ color: '#7a7390', fontSize: '11px', margin: '0 0 2px' }}>Saved</p>
-                    <p style={{ color: '#3ecf8e', fontSize: '18px', fontWeight: '700', margin: 0 }}>
-                      ₹{parseFloat(gullak.savedAmount).toLocaleString('en-IN')}
+                    <p style={{
+                      color: theme.textSecondary,
+                      fontSize: '11px', margin: '0 0 2px'
+                    }}>
+                      Saved
+                    </p>
+                    <p style={{
+                      color: theme.greenLight,
+                      fontSize: '18px', fontWeight: '700', margin: 0
+                    }}>
+                      ₹{parseFloat(gullak.savedAmount)
+                        .toLocaleString('en-IN')}
                     </p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <p style={{ color: '#7a7390', fontSize: '11px', margin: '0 0 2px' }}>Target</p>
-                    <p style={{ color: '#f0eeff', fontSize: '18px', fontWeight: '700', margin: 0 }}>
-                      ₹{parseFloat(gullak.targetAmount).toLocaleString('en-IN')}
+                    <p style={{
+                      color: theme.textSecondary,
+                      fontSize: '11px', margin: '0 0 2px'
+                    }}>
+                      Target
+                    </p>
+                    <p style={{
+                      color: theme.textPrimary,
+                      fontSize: '18px', fontWeight: '700', margin: 0
+                    }}>
+                      ₹{parseFloat(gullak.targetAmount)
+                        .toLocaleString('en-IN')}
                     </p>
                   </div>
                 </div>
 
                 {/* Progress bar */}
                 <div style={{ marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <span style={{ color: '#7a7390', fontSize: '11px' }}>Progress</span>
+                  <div style={{
+                    display: 'flex', justifyContent: 'space-between',
+                    marginBottom: '6px'
+                  }}>
+                    <span style={{
+                      color: theme.textSecondary, fontSize: '11px'
+                    }}>
+                      Progress
+                    </span>
                     <span style={{
                       color: gullak.color || '#c44b8a',
                       fontSize: '12px', fontWeight: '700'
@@ -254,32 +336,41 @@ export default function Gullak() {
                     </span>
                   </div>
                   <div style={{
-                    background: '#13111a', borderRadius: '10px',
-                    height: '10px', overflow: 'hidden'
+                    background: theme.bgInput,
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: '10px', height: '10px',
+                    overflow: 'hidden'
                   }}>
                     <div style={{
-                      height: '100%',
-                      width: `${progress}%`,
+                      height: '100%', width: `${progress}%`,
                       background: isCompleted
-                        ? 'linear-gradient(90deg, #3ecf8e, #20b070)'
+                        ? 'linear-gradient(90deg, #3ecf8e, #16a34a)'
                         : `linear-gradient(90deg, ${gullak.color || '#c44b8a'}, #e8632a)`,
                       borderRadius: '10px',
                       transition: 'width 0.5s ease'
                     }} />
                   </div>
                   {gullak.remainingAmount > 0 && (
-                    <p style={{ color: '#4a4560', fontSize: '11px', margin: '6px 0 0' }}>
-                      ₹{parseFloat(gullak.remainingAmount).toLocaleString('en-IN')} remaining
+                    <p style={{
+                      color: theme.textMuted,
+                      fontSize: '11px', margin: '6px 0 0'
+                    }}>
+                      ₹{parseFloat(gullak.remainingAmount)
+                        .toLocaleString('en-IN')} remaining
                     </p>
                   )}
                 </div>
 
                 {/* Target date */}
                 {gullak.targetDate && (
-                  <p style={{ color: '#4a4560', fontSize: '11px', marginBottom: '14px' }}>
-                    🗓️ Target: {new Date(gullak.targetDate).toLocaleDateString('en-IN', {
-                      day: 'numeric', month: 'short', year: 'numeric'
-                    })}
+                  <p style={{
+                    color: theme.textMuted,
+                    fontSize: '11px', marginBottom: '14px'
+                  }}>
+                    🗓️ Target: {new Date(gullak.targetDate)
+                      .toLocaleDateString('en-IN', {
+                        day: 'numeric', month: 'short', year: 'numeric'
+                      })}
                   </p>
                 )}
 
@@ -288,10 +379,13 @@ export default function Gullak() {
                   <button
                     onClick={() => openTx(gullak, 'DEPOSIT')}
                     style={{
-                      flex: 1, background: 'rgba(62,207,142,0.1)',
-                      border: '0.5px solid #3ecf8e', borderRadius: '10px',
-                      padding: '9px', fontSize: '12px', fontWeight: '600',
-                      color: '#3ecf8e', cursor: 'pointer'
+                      flex: 1,
+                      background: theme.greenBg,
+                      border: `1px solid ${theme.greenBorder}`,
+                      borderRadius: '10px', padding: '9px',
+                      fontSize: '12px', fontWeight: '600',
+                      color: theme.greenLight, cursor: 'pointer',
+                      transition: 'all 0.2s'
                     }}
                   >
                     + Add
@@ -299,10 +393,13 @@ export default function Gullak() {
                   <button
                     onClick={() => openTx(gullak, 'WITHDRAWAL')}
                     style={{
-                      flex: 1, background: 'rgba(232,99,42,0.1)',
-                      border: '0.5px solid #e8632a', borderRadius: '10px',
-                      padding: '9px', fontSize: '12px', fontWeight: '600',
-                      color: '#e8632a', cursor: 'pointer'
+                      flex: 1,
+                      background: theme.redBg,
+                      border: `1px solid ${theme.redBorder}`,
+                      borderRadius: '10px', padding: '9px',
+                      fontSize: '12px', fontWeight: '600',
+                      color: theme.redLight, cursor: 'pointer',
+                      transition: 'all 0.2s'
                     }}
                   >
                     - Withdraw
@@ -310,9 +407,11 @@ export default function Gullak() {
                   <button
                     onClick={() => handleDelete(gullak.id)}
                     style={{
-                      background: '#2a2535', border: 'none',
+                      background: theme.bgHover,
+                      border: `1px solid ${theme.border}`,
                       borderRadius: '10px', padding: '9px 12px',
-                      color: '#7a7390', cursor: 'pointer', fontSize: '14px'
+                      color: theme.textMuted, cursor: 'pointer',
+                      fontSize: '14px'
                     }}
                   >
                     🗑️
@@ -332,85 +431,55 @@ export default function Gullak() {
       >
         <form onSubmit={handleCreate}>
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '5px' }}>
-              Goal Name
-            </label>
+            <label style={label}>Goal Name</label>
             <input
               type="text" required
               placeholder="e.g. New Bike, iPhone, Trip to Goa"
               value={form.goalName}
               onChange={e => setForm({ ...form, goalName: e.target.value })}
-              style={{
-                width: '100%', background: '#13111a',
-                border: '0.5px solid #2a2535', borderRadius: '10px',
-                padding: '11px 14px', fontSize: '13px',
-                color: '#c9c4e8', outline: 'none', boxSizing: 'border-box'
-              }}
+              style={input}
               onFocus={e => e.target.style.borderColor = '#c44b8a'}
-              onBlur={e => e.target.style.borderColor = '#2a2535'}
+              onBlur={e => e.target.style.borderColor = theme.inputBorder}
             />
           </div>
 
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '5px' }}>
-              Target Amount (₹)
-            </label>
+            <label style={label}>Target Amount (₹)</label>
             <input
               type="number" required min="1"
               placeholder="e.g. 80000"
               value={form.targetAmount}
               onChange={e => setForm({ ...form, targetAmount: e.target.value })}
-              style={{
-                width: '100%', background: '#13111a',
-                border: '0.5px solid #2a2535', borderRadius: '10px',
-                padding: '11px 14px', fontSize: '13px',
-                color: '#c9c4e8', outline: 'none', boxSizing: 'border-box'
-              }}
+              style={input}
               onFocus={e => e.target.style.borderColor = '#c44b8a'}
-              onBlur={e => e.target.style.borderColor = '#2a2535'}
+              onBlur={e => e.target.style.borderColor = theme.inputBorder}
             />
           </div>
 
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '5px' }}>
-              Target Date (optional)
-            </label>
+            <label style={label}>Target Date (optional)</label>
             <input
               type="date"
               value={form.targetDate}
               onChange={e => setForm({ ...form, targetDate: e.target.value })}
-              style={{
-                width: '100%', background: '#13111a',
-                border: '0.5px solid #2a2535', borderRadius: '10px',
-                padding: '11px 14px', fontSize: '13px',
-                color: '#c9c4e8', outline: 'none', boxSizing: 'border-box'
-              }}
+              style={input}
             />
           </div>
 
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '5px' }}>
-              Description (optional)
-            </label>
+            <label style={label}>Description (optional)</label>
             <input
               type="text"
               placeholder="e.g. Saving for my dream bike"
               value={form.description}
               onChange={e => setForm({ ...form, description: e.target.value })}
-              style={{
-                width: '100%', background: '#13111a',
-                border: '0.5px solid #2a2535', borderRadius: '10px',
-                padding: '11px 14px', fontSize: '13px',
-                color: '#c9c4e8', outline: 'none', boxSizing: 'border-box'
-              }}
+              style={input}
             />
           </div>
 
           {/* Icon Picker */}
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '8px' }}>
-              Goal Icon
-            </label>
+            <label style={label}>Goal Icon</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {GOAL_ICONS.map(icon => (
                 <button
@@ -419,11 +488,12 @@ export default function Gullak() {
                   style={{
                     width: '40px', height: '40px',
                     background: form.icon === icon
-                      ? 'rgba(196,75,138,0.2)' : '#13111a',
+                      ? theme.bgAccent : theme.bgInput,
                     border: form.icon === icon
-                      ? '1px solid #c44b8a' : '0.5px solid #2a2535',
+                      ? `1px solid #c44b8a`
+                      : `1px solid ${theme.border}`,
                     borderRadius: '10px', fontSize: '20px',
-                    cursor: 'pointer'
+                    cursor: 'pointer', transition: 'all 0.15s'
                   }}
                 >
                   {icon}
@@ -434,9 +504,7 @@ export default function Gullak() {
 
           {/* Color Picker */}
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '8px' }}>
-              Card Color
-            </label>
+            <label style={label}>Card Color</label>
             <div style={{ display: 'flex', gap: '8px' }}>
               {COLORS.map(color => (
                 <div
@@ -448,7 +516,9 @@ export default function Gullak() {
                     cursor: 'pointer',
                     border: form.color === color
                       ? '3px solid white' : '3px solid transparent',
-                    transition: 'border 0.2s'
+                    boxShadow: form.color === color
+                      ? `0 0 0 2px ${color}` : 'none',
+                    transition: 'all 0.2s'
                   }}
                 />
               ))}
@@ -459,11 +529,13 @@ export default function Gullak() {
             type="submit" disabled={loading}
             style={{
               width: '100%',
-              background: loading ? '#2a2535'
+              background: loading
+                ? theme.border
                 : 'linear-gradient(135deg, #c44b8a, #e8632a)',
               border: 'none', borderRadius: '12px',
               padding: '13px', fontSize: '14px',
-              fontWeight: '700', color: 'white', cursor: 'pointer'
+              fontWeight: '700', color: 'white',
+              cursor: loading ? 'not-allowed' : 'pointer'
             }}
           >
             {loading ? 'Creating...' : 'Create Gullak 🪙'}
@@ -482,27 +554,55 @@ export default function Gullak() {
           <div>
             {/* Gullak info */}
             <div style={{
-              background: '#13111a', borderRadius: '12px',
-              padding: '16px', marginBottom: '20px'
+              background: theme.bgInput,
+              border: `1px solid ${theme.border}`,
+              borderRadius: '12px', padding: '16px',
+              marginBottom: '20px'
             }}>
-              <p style={{ color: '#f0eeff', fontWeight: '600', fontSize: '15px', margin: '0 0 8px' }}>
+              <p style={{
+                color: theme.textPrimary,
+                fontWeight: '600', fontSize: '15px', margin: '0 0 8px'
+              }}>
                 {selectedGullak.icon} {selectedGullak.goalName}
               </p>
               <div style={{ display: 'flex', gap: '20px' }}>
                 <div>
-                  <p style={{ color: '#7a7390', fontSize: '11px', margin: '0 0 2px' }}>Saved</p>
-                  <p style={{ color: '#3ecf8e', fontWeight: '700', fontSize: '14px', margin: 0 }}>
-                    ₹{parseFloat(selectedGullak.savedAmount).toLocaleString('en-IN')}
+                  <p style={{
+                    color: theme.textSecondary,
+                    fontSize: '11px', margin: '0 0 2px'
+                  }}>
+                    Saved
+                  </p>
+                  <p style={{
+                    color: theme.greenLight,
+                    fontWeight: '700', fontSize: '14px', margin: 0
+                  }}>
+                    ₹{parseFloat(selectedGullak.savedAmount)
+                      .toLocaleString('en-IN')}
                   </p>
                 </div>
                 <div>
-                  <p style={{ color: '#7a7390', fontSize: '11px', margin: '0 0 2px' }}>Target</p>
-                  <p style={{ color: '#f0eeff', fontWeight: '700', fontSize: '14px', margin: 0 }}>
-                    ₹{parseFloat(selectedGullak.targetAmount).toLocaleString('en-IN')}
+                  <p style={{
+                    color: theme.textSecondary,
+                    fontSize: '11px', margin: '0 0 2px'
+                  }}>
+                    Target
+                  </p>
+                  <p style={{
+                    color: theme.textPrimary,
+                    fontWeight: '700', fontSize: '14px', margin: 0
+                  }}>
+                    ₹{parseFloat(selectedGullak.targetAmount)
+                      .toLocaleString('en-IN')}
                   </p>
                 </div>
                 <div>
-                  <p style={{ color: '#7a7390', fontSize: '11px', margin: '0 0 2px' }}>Progress</p>
+                  <p style={{
+                    color: theme.textSecondary,
+                    fontSize: '11px', margin: '0 0 2px'
+                  }}>
+                    Progress
+                  </p>
                   <p style={{
                     color: selectedGullak.color || '#c44b8a',
                     fontWeight: '700', fontSize: '14px', margin: 0
@@ -515,7 +615,9 @@ export default function Gullak() {
 
             <form onSubmit={handleTransaction}>
               {/* Type toggle */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <div style={{
+                display: 'flex', gap: '8px', marginBottom: '16px'
+              }}>
                 {['DEPOSIT', 'WITHDRAWAL'].map(type => (
                   <button
                     key={type} type="button"
@@ -524,17 +626,19 @@ export default function Gullak() {
                       flex: 1,
                       background: txForm.type === type
                         ? type === 'DEPOSIT'
-                          ? 'rgba(62,207,142,0.2)'
-                          : 'rgba(232,99,42,0.2)'
-                        : '#13111a',
+                          ? theme.greenBg : theme.redBg
+                        : theme.bgInput,
                       border: txForm.type === type
-                        ? `1px solid ${type === 'DEPOSIT' ? '#3ecf8e' : '#e8632a'}`
-                        : '0.5px solid #2a2535',
+                        ? `1px solid ${type === 'DEPOSIT'
+                          ? theme.greenBorder : theme.redBorder}`
+                        : `1px solid ${theme.border}`,
                       borderRadius: '10px', padding: '10px',
                       color: txForm.type === type
-                        ? type === 'DEPOSIT' ? '#3ecf8e' : '#e8632a'
-                        : '#7a7390',
-                      fontWeight: '600', fontSize: '13px', cursor: 'pointer'
+                        ? type === 'DEPOSIT'
+                          ? theme.greenLight : theme.redLight
+                        : theme.textSecondary,
+                      fontWeight: '600', fontSize: '13px',
+                      cursor: 'pointer', transition: 'all 0.2s'
                     }}
                   >
                     {type === 'DEPOSIT' ? '💰 Add' : '💸 Withdraw'}
@@ -543,40 +647,26 @@ export default function Gullak() {
               </div>
 
               <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '5px' }}>
-                  Amount (₹)
-                </label>
+                <label style={label}>Amount (₹)</label>
                 <input
                   type="number" required min="0.01" step="0.01"
                   placeholder="0.00"
                   value={txForm.amount}
                   onChange={e => setTxForm({ ...txForm, amount: e.target.value })}
-                  style={{
-                    width: '100%', background: '#13111a',
-                    border: '0.5px solid #2a2535', borderRadius: '10px',
-                    padding: '11px 14px', fontSize: '13px',
-                    color: '#c9c4e8', outline: 'none', boxSizing: 'border-box'
-                  }}
+                  style={input}
                   onFocus={e => e.target.style.borderColor = '#c44b8a'}
-                  onBlur={e => e.target.style.borderColor = '#2a2535'}
+                  onBlur={e => e.target.style.borderColor = theme.inputBorder}
                 />
               </div>
 
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '11px', color: '#7a7390', marginBottom: '5px' }}>
-                  Note (optional)
-                </label>
+                <label style={label}>Note (optional)</label>
                 <input
                   type="text"
                   placeholder="e.g. Monthly savings"
                   value={txForm.note}
                   onChange={e => setTxForm({ ...txForm, note: e.target.value })}
-                  style={{
-                    width: '100%', background: '#13111a',
-                    border: '0.5px solid #2a2535', borderRadius: '10px',
-                    padding: '11px 14px', fontSize: '13px',
-                    color: '#c9c4e8', outline: 'none', boxSizing: 'border-box'
-                  }}
+                  style={input}
                 />
               </div>
 
@@ -584,9 +674,9 @@ export default function Gullak() {
                 type="submit" disabled={loading}
                 style={{
                   width: '100%',
-                  background: loading ? '#2a2535'
+                  background: loading ? theme.border
                     : txForm.type === 'DEPOSIT'
-                      ? 'linear-gradient(135deg, #3ecf8e, #20b070)'
+                      ? 'linear-gradient(135deg, #3ecf8e, #16a34a)'
                       : 'linear-gradient(135deg, #e8632a, #c44b8a)',
                   border: 'none', borderRadius: '12px',
                   padding: '13px', fontSize: '14px',

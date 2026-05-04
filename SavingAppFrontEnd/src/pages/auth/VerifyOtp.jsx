@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import logo from '../../assets/Applogo.png'
+import { authApi } from '../../api/authApi'
 
 export default function VerifyOtp() {
   const navigate = useNavigate()
@@ -46,6 +47,15 @@ export default function VerifyOtp() {
       setLoading(false)
     }
   }
+  const handleResend = async () => {
+    if (!email) return
+    try {
+      await authApi.resendOtp(email)
+      toast.success('OTP resent! Check your inbox 📧')
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to resend')
+    }
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#13111a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
@@ -85,7 +95,11 @@ export default function VerifyOtp() {
           </p>
 
           <form onSubmit={handleSubmit}>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }} onPaste={handlePaste}>
+            {/* OTP Boxes */}
+            <div
+              style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}
+              onPaste={handlePaste}
+            >
               {otp.map((digit, i) => (
                 <input
                   key={i}
@@ -97,19 +111,27 @@ export default function VerifyOtp() {
                   onChange={e => handleChange(i, e.target.value)}
                   onKeyDown={e => handleKeyDown(i, e)}
                   style={{
-                    flex: 1, aspectRatio: '1', textAlign: 'center',
-                    fontSize: '20px', fontWeight: '800',
+                    width: '48px',
+                    height: '52px',
+                    textAlign: 'center',
+                    fontSize: '20px',
+                    fontWeight: '800',
                     background: '#13111a',
-                    border: digit ? '1.5px solid #c44b8a' : '0.5px solid #2a2535',
-                    borderRadius: '12px', color: '#f0c0e0',
-                    outline: 'none', transition: 'border-color 0.2s'
+                    border: digit
+                      ? '1.5px solid #c44b8a'
+                      : '0.5px solid #2a2535',
+                    borderRadius: '12px',
+                    color: '#f0c0e0',
+                    outline: 'none',
+                    transition: 'border-color 0.2s',
+                    flexShrink: 0
                   }}
                   onFocus={e => e.target.style.borderColor = '#c44b8a'}
-                  onBlur={e => e.target.style.borderColor = digit ? '#c44b8a' : '#2a2535'}
+                  onBlur={e => e.target.style.borderColor = digit
+                    ? '#c44b8a' : '#2a2535'}
                 />
               ))}
             </div>
-
             <button
               type="submit"
               disabled={loading || otp.join('').length !== 6}
@@ -132,8 +154,12 @@ export default function VerifyOtp() {
           <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '12px', color: '#6b6580' }}>
             Didn't receive?{' '}
             <button
-              onClick={() => toast('Check spam folder or try again')}
-              style={{ background: 'none', border: 'none', color: '#c44b8a', fontWeight: '600', cursor: 'pointer', fontSize: '12px' }}
+              onClick={handleResend}
+              style={{
+                background: 'none', border: 'none',
+                color: '#c44b8a', fontWeight: '600',
+                cursor: 'pointer', fontSize: '12px'
+              }}
             >
               Resend OTP
             </button>
@@ -148,5 +174,8 @@ export default function VerifyOtp() {
         </p>
       </div>
     </div>
+
+
   )
+
 }

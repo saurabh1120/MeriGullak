@@ -19,6 +19,12 @@ public class AnalyticsService {
     private final ExpenseRepository expenseRepository;
     private final AccountRepository accountRepository;
     private final AuthHelper authHelper;
+    private final GullakRepository gullakRepository;
+    private final BudgetRepository budgetRepository;
+    public AuthHelper getAuthHelper()
+    {
+        return authHelper;
+    }
 
     private static final Map<String, String> CATEGORY_ICONS = Map.ofEntries(
             Map.entry("FOOD", "🍔"),
@@ -248,4 +254,53 @@ public class AnalyticsService {
 
         return suggestions;
     }
+
+    public int calculateHealthScore(Long userId) {
+        LocalDate now = LocalDate.now();
+        LocalDate start = now.withDayOfMonth(1);
+        LocalDate end = now.withDayOfMonth(now.lengthOfMonth());
+
+        List<Expense> expenses = expenseRepository
+                .findByUserIdAndDateRange(userId, start, end);
+
+        double income = expenses.stream()
+                .filter(e -> e.getTransactionType() ==
+                        Expense.TransactionType.CREDIT)
+                .mapToDouble(e -> e.getAmount().doubleValue()).sum();
+
+        double expense = expenses.stream()
+                .filter(e -> e.getTransactionType() ==
+                        Expense.TransactionType.DEBIT)
+                .mapToDouble(e -> e.getAmount().doubleValue()).sum();
+
+        int score = 50; // base score
+
+        // Savings rate (max 30 points)
+        if (income > 0) {
+            double savingsRate = (income - expense) / income * 100;
+            if (savingsRate >= 20) score += 30;
+            else if (savingsRate >= 10) score += 20;
+            else if (savingsRate >= 0) score += 10;
+            else score -= 10;
+        }
+
+        // Has active gullaks (max 10 points)
+        long activeGullaks = gullakRepository
+                .findByUserIdAndActiveTrueOrderByCreatedAtDesc(userId)
+                .stream()
+                .filter(g -> g.getStatus() ==
+                        com.MeiGullak.SavingApp.entity.Gullak.GullakStatus.ACTIVE)
+                .count();
+        if (activeGullaks > 0) score += 10;
+
+        // Has budgets (max 10 points)
+        long budgets = budgetRepository
+                .findByUserIdAndMonthAndYearAndActiveTrue(
+                        userId, now.getMonthValue(), now.getYear())
+                .size();
+        if (budgets > 0) score += 10;
+
+        return Math.min(100, Math.max(0, score));
+    }
+
 }

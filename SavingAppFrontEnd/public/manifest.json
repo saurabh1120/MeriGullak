@@ -1,0 +1,22 @@
+{
+  "name": "Meri Gullak",
+  "short_name": "Gullak",
+  "description": "Smart Savings & Expense Tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#13111a",
+  "theme_color": "#13111a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/Applogo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/Applogo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
