@@ -1,3 +1,40 @@
 spring:
   application:
-    name: SavingApp
+    name: merigullak-backend
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/merigullak_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=Asia/Kolkata
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: saurabh.sinha9256.ss@gmail.com
+    password: ejyk hptn yzon shju
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: 8080
+
+app:
+  jwt:
+    secret: meri-gullak-super-secret-jwt-key-2024-make-it-long-enough
+    expiration: 86400000
+  otp:
+    expiry: 5
