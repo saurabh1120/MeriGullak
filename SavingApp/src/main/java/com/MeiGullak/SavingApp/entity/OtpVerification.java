@@ -27,6 +27,7 @@ public class OtpVerification {
     @Enumerated(EnumType.STRING)
     private OtpPurpose purpose; // REGISTRATION or LOGIN
 
+    @Builder.Default
     private boolean used = false;
 
     private LocalDateTime expiresAt;

@@ -26,4 +26,5 @@ public class ExpenseRequest {
     private String description;
     private String merchant;
     private Expense.TransactionType transactionType = Expense.TransactionType.DEBIT;
+    private String receiptUrl;
 }

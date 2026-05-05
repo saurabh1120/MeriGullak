@@ -68,14 +68,13 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
+                        request.getEmail(), request.getPassword()
                 )
         );
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() ->
-                        new CustomException("User not found", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new CustomException(
+                        "User not found", HttpStatus.NOT_FOUND));
 
         if (!user.isEmailVerified()) {
             throw new CustomException(
@@ -92,6 +91,12 @@ public class AuthService {
                 .token(token)
                 .email(user.getEmail())
                 .fullName(user.getFullName())
+                .mobile(user.getMobile())
+                .gender(user.getGender())
+                .address(user.getAddress())
+                .city(user.getCity())
+                .country(user.getCountry())
+                .profilePhoto(user.getProfilePhoto())
                 .role(user.getRole().name())
                 .emailVerified(user.isEmailVerified())
                 .message("Login successful!")

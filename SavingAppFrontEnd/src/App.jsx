@@ -3,11 +3,11 @@ import { Toaster } from 'react-hot-toast'
 import { lazy, Suspense } from 'react'
 import ProtectedRoute from './components/common/ProtectedRoute'
 import useThemeStore from './store/themeStore'
-import ForgotPassword from './pages/auth/ForgotPassword'
 
 const Register = lazy(() => import('./pages/auth/Register'))
 const Login = lazy(() => import('./pages/auth/Login'))
 const VerifyOtp = lazy(() => import('./pages/auth/VerifyOtp'))
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'))
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'))
 const Accounts = lazy(() => import('./pages/accounts/Accounts'))
 const Expenses = lazy(() => import('./pages/expenses/Expenses'))
@@ -16,6 +16,9 @@ const Budget = lazy(() => import('./pages/budget/Budget'))
 const Transfer = lazy(() => import('./pages/transfer/Transfer'))
 const Analytics = lazy(() => import('./pages/analytics/Analytics'))
 const Profile = lazy(() => import('./pages/profile/Profile'))
+const Split = lazy(() => import('./pages/split/Split'))
+const GroupDetail = lazy(() => import('./pages/split/GroupDetail'))
+const Friends = lazy(() => import('./pages/split/Friends'))
 
 function App() {
   const { isDark } = useThemeStore()
@@ -35,7 +38,7 @@ function App() {
       <Suspense fallback={
         <div style={{
           minHeight: '100vh',
-          background: isDark ? '#13111a' : '#f5f5f0',
+          background: isDark ? '#13111a' : '#f0f2f5',
           display: 'flex', alignItems: 'center',
           justifyContent: 'center'
         }}>
@@ -46,21 +49,54 @@ function App() {
         </div>
       }>
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/accounts" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
-          <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
-          <Route path="/gullak" element={<ProtectedRoute><Gullak /></ProtectedRoute>} />
-          <Route path="/budget" element={<ProtectedRoute><Budget /></ProtectedRoute>} />
-          <Route path="/transfers" element={<ProtectedRoute><Transfer /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/split" element={<ProtectedRoute><div>Split Coming Soon!</div></ProtectedRoute>} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+
+          {/* Protected routes */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute><Dashboard /></ProtectedRoute>
+          } />
+          <Route path="/accounts" element={
+            <ProtectedRoute><Accounts /></ProtectedRoute>
+          } />
+          <Route path="/expenses" element={
+            <ProtectedRoute><Expenses /></ProtectedRoute>
+          } />
+          <Route path="/gullak" element={
+            <ProtectedRoute><Gullak /></ProtectedRoute>
+          } />
+          <Route path="/budget" element={
+            <ProtectedRoute><Budget /></ProtectedRoute>
+          } />
+          <Route path="/transfers" element={
+            <ProtectedRoute><Transfer /></ProtectedRoute>
+          } />
+          <Route path="/analytics" element={
+            <ProtectedRoute><Analytics /></ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute><Profile /></ProtectedRoute>
+          } />
+
+          {/* Split routes */}
+          <Route path="/split" element={
+            <ProtectedRoute><Split /></ProtectedRoute>
+          } />
+          <Route path="/split/groups/:id" element={
+            <ProtectedRoute><GroupDetail /></ProtectedRoute>
+          } />
+          <Route path="/split/friends" element={
+            <ProtectedRoute><Friends /></ProtectedRoute>
+          } />
+
+          {/* Fallback */}
+          <Route path="*" element={
+            <Navigate to="/dashboard" replace />
+          } />
         </Routes>
       </Suspense>
     </BrowserRouter>

@@ -10,6 +10,14 @@ const useAuthStore = create((set) => ({
     set({ token, user })
   },
 
+  updateUser: (updatedFields) => {
+    set((state) => {
+      const merged = { ...state.user, ...updatedFields }
+      localStorage.setItem('user', JSON.stringify(merged))
+      return { user: merged }
+    })
+  },
+
   logout: () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')

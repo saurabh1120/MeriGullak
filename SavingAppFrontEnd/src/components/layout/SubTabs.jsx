@@ -9,7 +9,7 @@ const tabGroups = {
     { path: '/transfers', label: '🔄 Transfers' },
   ],
   goals: [
-    { path: '/gullak', label: '🪙 My Gullak' },
+    { path: '/gullak', label: ' My Gullak' },
     { path: '/budget', label: '📊 Budget' },
   ],
 }

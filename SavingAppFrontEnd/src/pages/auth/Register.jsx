@@ -33,30 +33,25 @@ export default function Register() {
     <div style={{ minHeight: '100vh', background: '#13111a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
       <div style={{ width: '100%', maxWidth: '420px' }}>
 
-         {/* Logo */}
-               <div style={{
-                 display: 'flex',
-                 flexDirection: 'column',
-                 alignItems: 'center',
-                 justifyContent: 'center',
-       
-               }}>
-                 <img
-                   src={logo}
-                   alt="Meri Gullak"
-                   style={{
-                     width: '300px',
-                     height: '300px',
-                     objectFit: 'contain',
-                     display: 'block',
-                   }}
-                 />
-               </div>
-               <div style={{ textAlign: 'center', marginBottom: '6px' }}>
-  <div style={{ fontSize: '13px', color: '#7a7390' }}>
-    Welcome back!
-  </div>
-</div>
+        {/* Logo */}
+        <div style={{
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          marginBottom: '-13px'
+        }}>
+          <img
+            src={logo} alt="Meri Gullak"
+            style={{
+              width: '150px', height: '150px',
+              objectFit: 'contain', display: 'block'
+            }}
+          />
+        </div>
+        <div style={{ textAlign: 'center', marginBottom: '6px' }}>
+          {/* <div style={{ fontSize: '13px', color: '#7a7390' }}>
+            Welcome back!
+          </div> */}
+        </div>
 
         {/* Card */}
         <div style={{ background: '#1c1828', border: '0.5px solid #2a2535', borderRadius: '20px', padding: '28px 24px' }}>
@@ -66,8 +61,8 @@ export default function Register() {
 
           <form onSubmit={handleSubmit}>
             {[
-              { label: 'Full name', name: 'fullName', type: 'text', placeholder: 'Rahul Sharma' },
-              { label: 'Email address', name: 'email', type: 'email', placeholder: 'rahul@gmail.com' },
+              { label: 'Full name', name: 'fullName', type: 'text', placeholder: 'Your good name' },
+              { label: 'Email address', name: 'email', type: 'email', placeholder: 'your@gmail.com' },
               { label: 'Mobile number (optional)', name: 'mobile', type: 'tel', placeholder: '9876543210' },
               { label: 'Password', name: 'password', type: 'password', placeholder: 'Min. 6 characters' },
             ].map(({ label, name, type, placeholder }) => (

@@ -21,4 +21,5 @@ public class ExpenseResponse {
     private String merchant;
     private Expense.TransactionType transactionType;
     private LocalDateTime createdAt;
+    private String receiptUrl;
 }

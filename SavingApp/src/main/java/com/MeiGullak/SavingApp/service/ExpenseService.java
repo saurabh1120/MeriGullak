@@ -116,7 +116,9 @@ public class ExpenseService {
                 .description(expense.getDescription())
                 .merchant(expense.getMerchant())
                 .transactionType(expense.getTransactionType())
+                .receiptUrl(expense.getReceiptUrl())
                 .createdAt(expense.getCreatedAt())
                 .build();
     }
+
 }

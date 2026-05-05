@@ -7,6 +7,7 @@ import {
   LineChart, Line, CartesianGrid
 } from 'recharts'
 import useTheme from '../../hooks/useTheme'
+import useIsMobile from '../../hooks/useIsMobile'
 import { getCardStyle } from '../../utils/styles'
 import toast from 'react-hot-toast'
 
@@ -21,7 +22,8 @@ const MONTHS = [
 ]
 
 export default function Analytics() {
-  const { theme, isDark } = useTheme()
+  const { theme } = useTheme()
+  const isMobile = useIsMobile()
   const card = getCardStyle(theme)
 
   const now = new Date()
@@ -135,7 +137,9 @@ export default function Analytics() {
             style={selectStyle}
           >
             {MONTHS.map((m, i) => (
-              <option key={i} value={i + 1}>{m}</option>
+              <option key={i} value={i + 1}>
+                {isMobile ? m.slice(0, 3) : m}
+              </option>
             ))}
           </select>
           <select
@@ -154,7 +158,9 @@ export default function Analytics() {
       {data && (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+          gridTemplateColumns: isMobile
+            ? '1fr 1fr'
+            : 'repeat(auto-fit, minmax(160px, 1fr))',
           gap: '16px', marginBottom: '24px'
         }}>
           {[
@@ -192,7 +198,7 @@ export default function Analytics() {
                 {label}
               </p>
               <p style={{
-                color, fontSize: '15px',
+                color, fontSize: '16px',
                 fontWeight: '700', margin: 0,
                 overflow: 'hidden', textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap'
@@ -213,10 +219,12 @@ export default function Analytics() {
         </div>
       ) : (
         <>
-          {/* Charts Row 1 */}
+          {/* Charts Row 1
+              Desktop: side by side (1fr 1fr)
+              Mobile: stacked (1fr) */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
             gap: '20px', marginBottom: '20px'
           }}>
             {/* Monthly Trend */}
@@ -239,7 +247,7 @@ export default function Analytics() {
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart
                     data={monthlyData}
-                    margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
+                    margin={{ top: 5, right: 10, left: 5, bottom: 5 }}
                   >
                     <XAxis
                       dataKey="month"
@@ -249,6 +257,7 @@ export default function Analytics() {
                     <YAxis
                       tick={{ fill: theme.textSecondary, fontSize: 10 }}
                       axisLine={false} tickLine={false}
+                      width={50}
                       tickFormatter={v =>
                         `₹${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
                     />
@@ -286,10 +295,17 @@ export default function Analytics() {
                   No expenses this month
                 </p>
               ) : (
+                // Mobile: pie on top, legend below
+                // Desktop: pie left, legend right
                 <div style={{
-                  display: 'flex', alignItems: 'center', gap: '16px'
+                  display: 'flex',
+                  flexDirection: isMobile ? 'column' : 'row',
+                  alignItems: 'center', gap: '16px'
                 }}>
-                  <ResponsiveContainer width="50%" height={200}>
+                  <ResponsiveContainer
+                    width={isMobile ? '100%' : '50%'}
+                    height={200}
+                  >
                     <PieChart>
                       <Pie
                         data={pieData}
@@ -317,30 +333,37 @@ export default function Analytics() {
                       />
                     </PieChart>
                   </ResponsiveContainer>
+
+                  {/* Legend */}
                   <div style={{
-                    flex: 1, display: 'flex',
-                    flexDirection: 'column', gap: '6px'
+                    flex: 1, width: '100%',
+                    display: 'flex', flexDirection: 'column', gap: '6px'
                   }}>
                     {pieData.slice(0, 6).map((item, i) => (
                       <div key={i} style={{
-                        display: 'flex', alignItems: 'center', gap: '8px'
+                        display: 'flex', alignItems: 'center',
+                        gap: '8px', padding: '5px 8px',
+                        background: theme.bgInput,
+                        borderRadius: '8px',
+                        border: `1px solid ${theme.border}`
                       }}>
                         <div style={{
                           width: '8px', height: '8px',
-                          borderRadius: '50%',
-                          background: PIE_COLORS[i % PIE_COLORS.length],
-                          flexShrink: 0
+                          borderRadius: '50%', flexShrink: 0,
+                          background: PIE_COLORS[i % PIE_COLORS.length]
                         }} />
                         <p style={{
-                          color: theme.textPrimary, fontSize: '11px',
-                          margin: 0, flex: 1, overflow: 'hidden',
-                          textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                          color: theme.textPrimary,
+                          fontSize: '11px', margin: 0, flex: 1,
+                          overflow: 'hidden', textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
                         }}>
                           {item.name}
                         </p>
                         <p style={{
-                          color: theme.textSecondary,
-                          fontSize: '11px', margin: 0, flexShrink: 0
+                          color: PIE_COLORS[i % PIE_COLORS.length],
+                          fontSize: '11px', fontWeight: '700',
+                          margin: 0, flexShrink: 0
                         }}>
                           {item.percentage}%
                         </p>
@@ -352,10 +375,12 @@ export default function Analytics() {
             </div>
           </div>
 
-          {/* Charts Row 2 */}
+          {/* Charts Row 2
+              Desktop: side by side (1fr 1fr)
+              Mobile: stacked (1fr) */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
             gap: '20px', marginBottom: '20px'
           }}>
             {/* Weekly Trend */}
@@ -378,7 +403,7 @@ export default function Analytics() {
                 <ResponsiveContainer width="100%" height={220}>
                   <LineChart
                     data={weeklyData}
-                    margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
+                    margin={{ top: 5, right: 10, left: 5, bottom: 5 }}
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
@@ -392,6 +417,7 @@ export default function Analytics() {
                     <YAxis
                       tick={{ fill: theme.textSecondary, fontSize: 10 }}
                       axisLine={false} tickLine={false}
+                      width={50}
                       tickFormatter={v =>
                         `₹${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
                     />
@@ -407,7 +433,7 @@ export default function Analytics() {
               )}
             </div>
 
-            {/* Account Wise */}
+            {/* Account Wise Spending */}
             <div style={{ ...card }}>
               <h3 style={{
                 color: theme.textPrimary,
@@ -426,8 +452,9 @@ export default function Analytics() {
               ) : (
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart
-                    data={accountData} layout="vertical"
-                    margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
+                    data={accountData}
+                    layout="vertical"
+                    margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
                   >
                     <XAxis
                       type="number"
@@ -437,13 +464,16 @@ export default function Analytics() {
                         `₹${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
                     />
                     <YAxis
-                      type="category" dataKey="name" width={90}
+                      type="category" dataKey="name"
                       tick={{ fill: theme.textSecondary, fontSize: 11 }}
                       axisLine={false} tickLine={false}
+                      width={isMobile ? 80 : 100}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <defs>
-                      <linearGradient id="accGrad" x1="0" y1="0" x2="1" y2="0">
+                      <linearGradient
+                        id="accGrad" x1="0" y1="0" x2="1" y2="0"
+                      >
                         <stop offset="0%" stopColor="#7c3aed" />
                         <stop offset="100%" stopColor="#c44b8a" />
                       </linearGradient>
@@ -476,27 +506,25 @@ export default function Analytics() {
                   <div key={i} style={{
                     display: 'flex', alignItems: 'center',
                     gap: '14px', padding: '12px',
-                    background: theme.bgInput,
-                    borderRadius: '10px',
+                    background: theme.bgInput, borderRadius: '10px',
                     border: `1px solid ${theme.border}`
                   }}>
                     <span style={{ fontSize: '20px', flexShrink: 0 }}>
                       {cat.icon}
                     </span>
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{
                         display: 'flex', justifyContent: 'space-between',
-                        marginBottom: '5px'
+                        marginBottom: '5px', flexWrap: 'wrap', gap: '4px'
                       }}>
                         <p style={{
-                          color: theme.textPrimary,
-                          fontSize: '13px', fontWeight: '600', margin: 0
+                          color: theme.textPrimary, fontSize: '13px',
+                          fontWeight: '600', margin: 0
                         }}>
                           {cat.category}
                         </p>
                         <div style={{
-                          display: 'flex', gap: '16px',
-                          alignItems: 'center'
+                          display: 'flex', gap: '10px', alignItems: 'center'
                         }}>
                           <p style={{
                             color: theme.textSecondary,
@@ -519,13 +547,11 @@ export default function Analytics() {
                         </div>
                       </div>
                       <div style={{
-                        background: theme.border,
-                        borderRadius: '10px', height: '6px',
-                        overflow: 'hidden'
+                        background: theme.border, borderRadius: '10px',
+                        height: '6px', overflow: 'hidden'
                       }}>
                         <div style={{
-                          height: '100%',
-                          width: `${cat.percentage}%`,
+                          height: '100%', width: `${cat.percentage}%`,
                           background: PIE_COLORS[i % PIE_COLORS.length],
                           borderRadius: '10px'
                         }} />

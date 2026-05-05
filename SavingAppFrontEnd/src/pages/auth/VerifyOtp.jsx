@@ -63,27 +63,22 @@ export default function VerifyOtp() {
 
         {/* Logo */}
         <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          marginBottom: '-13px'
         }}>
           <img
-            src={logo}
-            alt="Meri Gullak"
+            src={logo} alt="Meri Gullak"
             style={{
-              width: '300px',
-              height: '300px',
-              objectFit: 'contain',
-              display: 'block',
+              width: '150px', height: '150px',
+              objectFit: 'contain', display: 'block'
             }}
           />
         </div>
         <div style={{ textAlign: 'center', marginBottom: '6px' }}>
-          <div style={{ fontSize: '13px', color: '#7a7390' }}>
+          {/* <div style={{ fontSize: '13px', color: '#7a7390' }}>
             Almost there!
-          </div>
+          </div> */}
         </div>
 
         <div style={{ background: '#1c1828', border: '0.5px solid #2a2535', borderRadius: '20px', padding: '28px 24px' }}>

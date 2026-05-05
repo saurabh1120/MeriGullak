@@ -61,4 +61,11 @@ public class User {
     public enum Role {
         USER, ADMIN
     }
+
+    // Add these fields to User.java
+    private String gender;
+    private String address;
+    private String city;
+    private String country;
+    private String profilePhoto;
 }

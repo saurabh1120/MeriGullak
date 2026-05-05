@@ -1,5 +1,6 @@
 package com.MeiGullak.SavingApp.controller;
 
+import com.MeiGullak.SavingApp.dto.AuthResponse;
 import com.MeiGullak.SavingApp.dto.UpdateProfileRequest;
 import com.MeiGullak.SavingApp.dto.ChangePasswordRequest;
 import com.MeiGullak.SavingApp.service.UserService;
@@ -7,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/users")
@@ -16,20 +18,28 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/me")
-    public ResponseEntity<?> getProfile() {
+    public ResponseEntity<AuthResponse> getProfile() {
         return ResponseEntity.ok(userService.getProfile());
     }
 
     @PutMapping("/profile")
-    public ResponseEntity<?> updateProfile(
-            @Valid @RequestBody UpdateProfileRequest request
+    public ResponseEntity<AuthResponse> updateProfile(
+            @RequestBody UpdateProfileRequest request
     ) {
         return ResponseEntity.ok(userService.updateProfile(request));
     }
 
+    @PostMapping("/profile-photo")
+    public ResponseEntity<AuthResponse> uploadProfilePhoto(
+            @RequestParam("file") MultipartFile file
+    ) {
+        return ResponseEntity.ok(
+                userService.updateProfilePhoto(file));
+    }
+
     @PutMapping("/change-password")
     public ResponseEntity<String> changePassword(
-            @Valid @RequestBody ChangePasswordRequest request
+            @RequestBody ChangePasswordRequest request
     ) {
         return ResponseEntity.ok(
                 userService.changePassword(request));

@@ -66,4 +66,5 @@ public class Expense {
     public enum TransactionType {
         DEBIT, CREDIT
     }
+    private String receiptUrl;
 }

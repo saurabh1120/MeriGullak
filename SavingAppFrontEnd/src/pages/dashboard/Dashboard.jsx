@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react'
 import Layout from '../../components/layout/Layout'
 import { dashboardApi } from '../../api/dashboardApi'
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell
-} from 'recharts'
 import useAuthStore from '../../store/authStore'
 import useTheme from '../../hooks/useTheme'
+import useIsMobile from '../../hooks/useIsMobile'
 import { getCardStyle } from '../../utils/styles'
 import toast from 'react-hot-toast'
 
@@ -25,6 +22,8 @@ const PIE_COLORS = [
 export default function Dashboard() {
   const { user } = useAuthStore()
   const { theme, isDark } = useTheme()
+  const isMobile = useIsMobile()
+  const card = getCardStyle(theme)
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -60,8 +59,6 @@ export default function Dashboard() {
   const fmt = (val) =>
     `₹${parseFloat(val || 0).toLocaleString('en-IN')}`
 
-  const card = getCardStyle(theme)
-
   return (
     <Layout>
       {/* Header */}
@@ -83,7 +80,9 @@ export default function Dashboard() {
       {/* Top Stats */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gridTemplateColumns: isMobile
+          ? '1fr 1fr'
+          : 'repeat(auto-fit, minmax(200px, 1fr))',
         gap: '16px', marginBottom: '24px'
       }}>
         {[
@@ -95,8 +94,7 @@ export default function Dashboard() {
               ? 'linear-gradient(135deg, rgba(196,75,138,0.15), rgba(232,99,42,0.15))'
               : 'linear-gradient(135deg, rgba(196,75,138,0.08), rgba(232,99,42,0.06))',
             border: isDark
-              ? 'rgba(196,75,138,0.3)'
-              : 'rgba(196,75,138,0.2)',
+              ? 'rgba(196,75,138,0.3)' : 'rgba(196,75,138,0.2)',
             icon: '💳'
           },
           {
@@ -104,8 +102,7 @@ export default function Dashboard() {
             value: fmt(data?.monthlyIncome),
             color: theme.greenLight,
             bg: theme.greenBg,
-            border: isDark
-              ? 'rgba(62,207,142,0.2)' : 'rgba(22,163,74,0.15)',
+            border: isDark ? 'rgba(62,207,142,0.2)' : 'rgba(22,163,74,0.15)',
             icon: '📥'
           },
           {
@@ -113,8 +110,7 @@ export default function Dashboard() {
             value: fmt(data?.monthlyExpense),
             color: '#e8632a',
             bg: theme.redBg,
-            border: isDark
-              ? 'rgba(232,99,42,0.2)' : 'rgba(220,38,38,0.15)',
+            border: isDark ? 'rgba(232,99,42,0.2)' : 'rgba(220,38,38,0.15)',
             icon: '📤'
           },
           {
@@ -122,8 +118,7 @@ export default function Dashboard() {
             value: fmt(data?.totalSavings),
             color: theme.purple,
             bg: theme.purpleBg,
-            border: isDark
-              ? 'rgba(124,58,237,0.2)' : 'rgba(124,58,237,0.15)',
+            border: isDark ? 'rgba(124,58,237,0.2)' : 'rgba(124,58,237,0.15)',
             icon: '💰₹'
           },
         ].map(({ label, value, color, bg, border, icon }) => (
@@ -139,7 +134,7 @@ export default function Dashboard() {
               justifyContent: 'space-between',
               alignItems: 'flex-start'
             }}>
-              <div>
+              <div style={{ minWidth: 0, flex: 1 }}>
                 <p style={{
                   color: theme.textSecondary,
                   fontSize: '12px', margin: '0 0 8px'
@@ -147,13 +142,19 @@ export default function Dashboard() {
                   {label}
                 </p>
                 <p style={{
-                  color, fontSize: '22px',
-                  fontWeight: '800', margin: 0
+                  color,
+                  fontSize: isMobile ? '16px' : '22px',
+                  fontWeight: '800', margin: 0,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
                 }}>
                   {value}
                 </p>
               </div>
-              <span style={{ fontSize: '24px' }}>{icon}</span>
+              <span style={{ fontSize: '24px', flexShrink: 0 }}>
+                {icon}
+              </span>
             </div>
           </div>
         ))}
@@ -162,26 +163,16 @@ export default function Dashboard() {
       {/* Second Row */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
+        gridTemplateColumns: isMobile
+          ? '1fr 1fr'
+          : 'repeat(4, 1fr)',
         gap: '16px', marginBottom: '24px'
       }}>
         {[
-          {
-            label: 'Active Goals', value: data?.activeGoals || 0,
-            icon: '🎯', color: theme.yellowLight
-          },
-          {
-            label: 'Completed', value: data?.completedGoals || 0,
-            icon: '✅', color: theme.greenLight
-          },
-          {
-            label: 'Accounts', value: data?.totalAccounts || 0,
-            icon: '🏦', color: '#c44b8a'
-          },
-          {
-            label: 'Net Savings', value: fmt(data?.netSavings),
-            icon: '💹', color: theme.purple
-          },
+          { label: 'Active Goals', value: data?.activeGoals || 0, icon: '🎯', color: theme.yellowLight },
+          { label: 'Completed Goals', value: data?.completedGoals || 0, icon: '✅', color: theme.greenLight },
+          { label: 'Accounts', value: data?.totalAccounts || 0, icon: '🏦', color: '#c44b8a' },
+          { label: 'Net Savings', value: fmt(data?.netSavings), icon: '💹', color: theme.purple },
         ].map(({ label, value, icon, color }) => (
           <div key={label} style={{ ...card }}>
             <p style={{
@@ -191,8 +182,12 @@ export default function Dashboard() {
               {icon} {label}
             </p>
             <p style={{
-              color, fontSize: '20px',
-              fontWeight: '700', margin: 0
+              color,
+              fontSize: isMobile ? '15px' : '20px',
+              fontWeight: '700', margin: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
             }}>
               {value}
             </p>
@@ -220,21 +215,20 @@ export default function Dashboard() {
                 border: `1px solid ${alert.overBudget
                   ? theme.redBorder : theme.yellowBorder}`,
                 borderRadius: '12px', padding: '12px 16px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
+                display: 'flex', justifyContent: 'space-between',
+                alignItems: 'center', gap: '8px'
               }}>
                 <p style={{
                   color: alert.overBudget
                     ? theme.redLight : theme.yellowLight,
-                  fontSize: '13px', margin: 0
+                  fontSize: '13px', margin: 0, flex: 1
                 }}>
                   {alert.alertMessage}
                 </p>
                 <span style={{
                   color: alert.overBudget
                     ? theme.redLight : theme.yellowLight,
-                  fontSize: '13px', fontWeight: '700'
+                  fontSize: '13px', fontWeight: '700', flexShrink: 0
                 }}>
                   {alert.usagePercentage.toFixed(0)}%
                 </span>
@@ -244,10 +238,12 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Main Grid */}
+      {/* Main content grid
+          Desktop: side by side (1fr 1fr)
+          Mobile: stacked (1fr) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
         gap: '20px', marginBottom: '24px'
       }}>
         {/* Recent Transactions */}
@@ -269,12 +265,12 @@ export default function Dashboard() {
             </p>
           ) : (
             <div style={{
-              display: 'flex', flexDirection: 'column', gap: '8px'
+              display: 'flex', flexDirection: 'column', gap: '10px'
             }}>
               {data.recentTransactions.slice(0, 6).map(tx => (
                 <div key={tx.id} style={{
                   display: 'flex', alignItems: 'center',
-                  gap: '10px', padding: '10px',
+                  gap: '12px', padding: '10px',
                   background: theme.bgInput,
                   borderRadius: '10px',
                   border: `1px solid ${theme.border}`
@@ -291,10 +287,10 @@ export default function Dashboard() {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{
-                      color: theme.textPrimary,
-                      fontSize: '13px', fontWeight: '600',
-                      margin: 0, overflow: 'hidden',
-                      textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                      color: theme.textPrimary, fontSize: '13px',
+                      fontWeight: '600', margin: 0,
+                      overflow: 'hidden', textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
                     }}>
                       {tx.description || tx.category}
                     </p>
@@ -320,14 +316,16 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Top Gullaks */}
+        {/* Savings Goals
+            KEY FIX: on mobile, goal name won't overflow
+            because we use flex properly */}
         <div style={{ ...card }}>
           <h2 style={{
             color: theme.textPrimary,
             fontSize: '16px', fontWeight: '700',
             margin: '0 0 16px'
           }}>
-            🪙 Savings Goals
+            🎯 Savings Goals
           </h2>
           {!data?.topGullaks?.length ? (
             <p style={{
@@ -335,7 +333,7 @@ export default function Dashboard() {
               fontSize: '13px', textAlign: 'center',
               padding: '20px 0'
             }}>
-              No goals yet!
+              No goals yet. Create your first Gullak!
             </p>
           ) : (
             <div style={{
@@ -343,36 +341,41 @@ export default function Dashboard() {
             }}>
               {data.topGullaks.map(gullak => (
                 <div key={gullak.id}>
+                  {/* Row 1: icon + name + % — all in one row with ellipsis */}
                   <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginBottom: '6px'
+                    display: 'flex', alignItems: 'center',
+                    gap: '6px', marginBottom: '6px',
+                    width: '100%', overflow: 'hidden'
                   }}>
-                    <div style={{
-                      display: 'flex', alignItems: 'center', gap: '8px'
-                    }}>
-                      <span style={{ fontSize: '18px' }}>
-                        {gullak.icon || '💰'}
-                      </span>
-                      <p style={{
-                        color: theme.textPrimary,
-                        fontSize: '13px', fontWeight: '600', margin: 0
-                      }}>
-                        {gullak.goalName}
-                      </p>
-                    </div>
+                    <span style={{ fontSize: '16px', flexShrink: 0 }}>
+                      {gullak.icon || '💰'}
+                    </span>
                     <p style={{
+                      color: theme.textPrimary, fontSize: '13px',
+                      fontWeight: '600', margin: 0,
+                      flex: 1, minWidth: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {gullak.goalName}
+                    </p>
+                    <span style={{
                       color: gullak.color || '#c44b8a',
-                      fontSize: '13px', fontWeight: '700', margin: 0
+                      fontSize: '12px', fontWeight: '700',
+                      flexShrink: 0, marginLeft: '4px'
                     }}>
                       {gullak.progressPercentage.toFixed(1)}%
-                    </p>
+                    </span>
                   </div>
+
+                  {/* Progress bar — full width */}
                   <div style={{
                     background: theme.bgInput,
+                    border: `1px solid ${theme.border}`,
                     borderRadius: '10px', height: '8px',
-                    overflow: 'hidden',
-                    border: `1px solid ${theme.border}`
+                    overflow: 'hidden', marginBottom: '4px',
+                    width: '100%'
                   }}>
                     <div style={{
                       height: '100%',
@@ -384,10 +387,11 @@ export default function Dashboard() {
                       transition: 'width 0.5s ease'
                     }} />
                   </div>
+
+                  {/* Saved / Target amounts */}
                   <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginTop: '4px'
+                    display: 'flex', justifyContent: 'space-between',
+                    width: '100%'
                   }}>
                     <p style={{
                       color: theme.textSecondary,
@@ -423,7 +427,8 @@ export default function Dashboard() {
           </h2>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 2fr', gap: '16px'
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 2fr',
+            gap: '16px'
           }}>
             {/* Level card */}
             <div style={{
@@ -435,79 +440,89 @@ export default function Dashboard() {
                 ? '1px solid rgba(124,58,237,0.3)'
                 : '1px solid rgba(124,58,237,0.2)'
             }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '36px', marginBottom: '8px' }}>⭐</div>
-                <p style={{
-                  color: theme.purple, fontSize: '11px', margin: '0 0 4px'
-                }}>
-                  Level {data.gamification.level}
-                </p>
-                <p style={{
-                  color: theme.textPrimary,
-                  fontSize: '15px', fontWeight: '700',
-                  margin: '0 0 12px'
-                }}>
-                  {data.gamification.levelName}
-                </p>
+              {/* On mobile: horizontal layout */}
+              <div style={{
+                display: isMobile ? 'flex' : 'block',
+                alignItems: 'center', gap: '16px'
+              }}>
                 <div style={{
-                  display: 'flex', justifyContent: 'space-between',
-                  marginBottom: '6px'
+                  textAlign: 'center', flexShrink: 0
                 }}>
-                  <span style={{
-                    color: theme.textSecondary, fontSize: '11px'
-                  }}>Points</span>
-                  <span style={{
-                    color: theme.yellowLight,
-                    fontSize: '11px', fontWeight: '700'
+                  <div style={{ fontSize: '40px', marginBottom: '8px' }}>⭐</div>
+                  <p style={{
+                    color: theme.purple, fontSize: '12px', margin: '0 0 4px'
                   }}>
-                    {data.gamification.totalPoints}
-                  </span>
+                    Level {data.gamification.level}
+                  </p>
+                  <p style={{
+                    color: theme.textPrimary,
+                    fontSize: '16px', fontWeight: '700',
+                    margin: isMobile ? 0 : '0 0 12px'
+                  }}>
+                    {data.gamification.levelName}
+                  </p>
                 </div>
-                <div style={{
-                  background: theme.bgInput,
-                  borderRadius: '10px', height: '6px',
-                  overflow: 'hidden',
-                  border: `1px solid ${theme.border}`
-                }}>
+
+                <div style={{ flex: 1, marginTop: isMobile ? 0 : '12px' }}>
                   <div style={{
-                    height: '100%',
-                    width: `${Math.min(
-                      data.gamification.totalPoints % 100, 100)}%`,
-                    background: 'linear-gradient(90deg, #7c3aed, #c44b8a)',
-                    borderRadius: '10px'
-                  }} />
-                </div>
-                <div style={{
-                  display: 'flex', justifyContent: 'space-around',
-                  marginTop: '12px'
-                }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <p style={{
+                    display: 'flex', justifyContent: 'space-between',
+                    marginBottom: '6px'
+                  }}>
+                    <span style={{ color: theme.textSecondary, fontSize: '11px' }}>
+                      Points
+                    </span>
+                    <span style={{
                       color: theme.yellowLight,
-                      fontSize: '18px', fontWeight: '700', margin: 0
+                      fontSize: '11px', fontWeight: '700'
                     }}>
-                      🔥{data.gamification.currentStreak}
-                    </p>
-                    <p style={{
-                      color: theme.textSecondary,
-                      fontSize: '10px', margin: '2px 0 0'
-                    }}>
-                      Streak
-                    </p>
+                      {data.gamification.totalPoints}
+                    </span>
                   </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <p style={{
-                      color: theme.greenLight,
-                      fontSize: '18px', fontWeight: '700', margin: 0
-                    }}>
-                      {data.gamification.noSpendDays}
-                    </p>
-                    <p style={{
-                      color: theme.textSecondary,
-                      fontSize: '10px', margin: '2px 0 0'
-                    }}>
-                      No-Spend
-                    </p>
+                  <div style={{
+                    background: theme.bgInput, borderRadius: '10px',
+                    height: '6px', overflow: 'hidden',
+                    border: `1px solid ${theme.border}`
+                  }}>
+                    <div style={{
+                      height: '100%',
+                      width: `${Math.min(
+                        data.gamification.totalPoints % 100, 100)}%`,
+                      background: 'linear-gradient(90deg, #7c3aed, #c44b8a)',
+                      borderRadius: '10px'
+                    }} />
+                  </div>
+                  <div style={{
+                    display: 'flex', justifyContent: 'space-around',
+                    marginTop: '12px'
+                  }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <p style={{
+                        color: theme.yellowLight,
+                        fontSize: '18px', fontWeight: '700', margin: 0
+                      }}>
+                        🔥{data.gamification.currentStreak}
+                      </p>
+                      <p style={{
+                        color: theme.textSecondary,
+                        fontSize: '10px', margin: '2px 0 0'
+                      }}>
+                        Day Streak
+                      </p>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <p style={{
+                        color: theme.greenLight,
+                        fontSize: '18px', fontWeight: '700', margin: 0
+                      }}>
+                        {data.gamification.noSpendDays}
+                      </p>
+                      <p style={{
+                        color: theme.textSecondary,
+                        fontSize: '10px', margin: '2px 0 0'
+                      }}>
+                        No-Spend Days
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -572,7 +587,9 @@ export default function Dashboard() {
           </h2>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gridTemplateColumns: isMobile
+              ? '1fr'
+              : 'repeat(auto-fit, minmax(260px, 1fr))',
             gap: '12px'
           }}>
             {data.suggestions.map((s, i) => (
@@ -597,7 +614,7 @@ export default function Dashboard() {
                 </div>
                 <p style={{
                   color: theme.textSecondary, fontSize: '12px',
-                  margin: 0, lineHeight: '1.6'
+                  margin: 0, lineHeight: '1.5'
                 }}>
                   {s.message}
                 </p>

@@ -212,7 +212,7 @@ export default function Gullak() {
         <div style={{
           ...card, textAlign: 'center', padding: '60px'
         }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🪙</div>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>₹🐖</div>
           <p style={{
             color: theme.textSecondary, fontSize: '15px', margin: 0
           }}>

@@ -148,7 +148,7 @@ export default function Login() {
               <label style={label}>Email address</label>
               <input
                 name="email" type="email"
-                placeholder="rahul@gmail.com"
+                placeholder="your@gmail.com"
                 value={form.email}
                 onChange={handleChange}
                 required
