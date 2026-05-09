@@ -19,10 +19,28 @@ export const splitApi = {
 
   // Expenses
   addExpense: (data) => api.post('/split/expenses', data),
+  updateExpense: (id, data) =>
+    api.put(`/split/expenses/${id}`, data),
+  deleteExpense: (id) =>
+    api.delete(`/split/expenses/${id}`),
   getGroupExpenses: (groupId) =>
     api.get(`/split/groups/${groupId}/expenses`),
+
+  // Balances
   getGroupBalances: (groupId) =>
     api.get(`/split/groups/${groupId}/balances`),
+
+  // History — expenses + cash payments combined
+  getGroupHistory: (groupId) =>
+    api.get(`/split/groups/${groupId}/history`),
+
+  // Settle
   settleUp: (groupId, userId) =>
     api.post(`/split/groups/${groupId}/settle/${userId}`),
+  partialSettle: (groupId, userId, amount) =>
+    api.post(
+      `/split/groups/${groupId}/settle/${userId}/partial`,
+      null,
+      { params: { amount } }
+    ),
 }

@@ -10,6 +10,7 @@ import java.util.List;
 @NoArgsConstructor @AllArgsConstructor
 @Builder
 public class SplitExpenseResponse {
+
     private Long id;
     private Long groupId;
     private String groupName;
@@ -29,7 +30,8 @@ public class SplitExpenseResponse {
     public static class ShareDetail {
         private Long userId;
         private String userName;
-        private BigDecimal shareAmount;
+        private BigDecimal shareAmount;  // what they OWE
+        private BigDecimal paidAmount;   // what they actually PAID
         private boolean settled;
     }
 }

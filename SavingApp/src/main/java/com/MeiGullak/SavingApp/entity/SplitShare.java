@@ -23,8 +23,15 @@ public class SplitShare {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    // What this person OWES (for equal/shares split)
+    // OR what they still need to pay (for custom split)
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal shareAmount;
+
+    // What this person ACTUALLY PAID at the spot
+    // (only relevant for custom split)
+    @Column(precision = 12, scale = 2)
+    private BigDecimal paidAmount;
 
     @Builder.Default
     private boolean settled = false;

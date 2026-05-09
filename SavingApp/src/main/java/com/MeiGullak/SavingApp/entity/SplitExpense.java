@@ -42,7 +42,7 @@ public class SplitExpense {
     private String receiptUrl;
 
     @OneToMany(mappedBy = "expense",
-            cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+        cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<SplitShare> shares;
 
     private LocalDateTime createdAt;
@@ -53,6 +53,8 @@ public class SplitExpense {
     }
 
     public enum SplitType {
-        EQUAL, CUSTOM
+        EQUAL,   // divide equally among all members
+        CUSTOM,  // manually enter amount per person
+        SHARES   // enter shares per person (e.g. 2:1:1)
     }
 }

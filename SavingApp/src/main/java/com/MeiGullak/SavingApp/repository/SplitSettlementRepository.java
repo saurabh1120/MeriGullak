@@ -5,10 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface SplitSettlementRepository
-        extends JpaRepository<SplitSettlement, Long> {
+    extends JpaRepository<SplitSettlement, Long> {
 
-    List<SplitSettlement> findByGroupIdOrderBySettledAtDesc(Long groupId);
+    List<SplitSettlement> findByGroupIdOrderBySettledAtDesc(
+        Long groupId);
 
     List<SplitSettlement> findByPaidByIdOrPaidToId(
-            Long paidById, Long paidToId);
+        Long paidById, Long paidToId);
 }
